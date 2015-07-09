@@ -45,7 +45,7 @@ class ConfigMgr(object):
 							    'bulk_csv': os.path.abspath(os.path.join(self.dir, '..', 'bulk_csv')),
 							    'app': os.path.abspath(os.path.join(self.dir, '..', '..', 'app')),
 							    'logging': os.path.abspath(os.path.join(self.dir, '..', '..', 'app_logs')),
-							    'csv_stor': os.path.abspath(os.path.join(self.dir, '..', '..', '..', '..', 'csv_stor')),
+							    'csv_stor': os.path.abspath(os.path.join(self.dir, '..', '..', '..', 'iisLogCsv')),
 							    'log_done': os.path.abspath(os.path.join(self.dir, "Q:\\soft\Leads\\web\\log_done")),
 							    'file_mover': os.path.abspath(os.path.join(self.dir, '..', 'file_mover.py'))}
 			
