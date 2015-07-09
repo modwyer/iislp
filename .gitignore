@@ -99,3 +99,10 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Other file types
+*.csv
+*.log
+*.txt
+*.ini
+*.bat
