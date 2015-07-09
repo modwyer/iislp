@@ -13,53 +13,49 @@ class CsvWriter(object):
 			raise ArgumentError("CsvWriter:__init__:ERROR!", "Outputpath param is None.")
 		self.data = []
 		self.datetime = datetime.now().strftime("%Y_%m_%d@%I%M%p")	#Format datetime as 2014_11_10@0232pm
-		self.filename = outputpath 	# CSV file to write to.
-		self.row_count = self.get_row_count()	# Total rows in the outputpath CSV file.
-		print ("row_count: ", self.row_count)
+		self.filename = outputpath 							# CSV file to write to.
+		self.row_count = self.get_row_count()				# Total rows in the outputpath CSV file.
 		
-		# If the CSV file already has 100k+ rows then rename it with
-		# a timestamp so a new CSV file will be created in the next 'flush'.
+		# If the CSV file already has 100k+ rows then save a copy of it with
+		# a timestamp in the name, then remove the large CSV file  so a new 
+		# CSV file will be created in the next 'flush'.
 		if self.row_count > 15000:		
 			logger.log(LoggerType.info, "Bulk CSV file reached 100k rows...")
+			
 			# Make the filename of the copy.
-			copy_name = self.filename[:-4]	# All but '.csv'.
+			copy_name = self.filename[:-4]					# All but '.csv'.
 			t = time.localtime()
-			timestamp = time.strftime('%y%m%d_%H%M%S', t)	# Timestamp: Ex. 150707_202456
-			dest = copy_name + "_" + timestamp +".csv"	# All together as full filename.
+			timestamp = time.strftime('%y%m%d_%H%M%S', t)		# Timestamp: Ex. 150707_202456
+			dest = copy_name + "_" + timestamp + ".csv"		# All together as full filename.
 			
 			logger.log(LoggerType.info, "Saving a version named: %s" % dest)
 			
-			shutil.copy2(self.filename, dest)	# Save a copy of the file with the new name.
+			shutil.copy2(self.filename, dest)					# Save a copy of the file with the new name.
 			
-			if os.path.exists(dest):		# If the version just saved exists...
-				print ("dest exists- deleting ", self.filename)
-				os.remove(self.filename)	# Remove the current bulk csv file.
+			if os.path.exists(dest):						# If the version just saved exists...
+				logger.log(LoggerType.info, "Deleting: %s" % self.filename)
+				os.remove(self.filename)					# Remove the current bulk csv file.
 			else:
 				raise ArgumentError("CsvWriter:__init__:ERROR!", "dest %s does not exist!" % dest)
 		
 	def append_file(self, file):
 		count = self.get_row_count()
-		# Open the newly made csv file, read in its rows, decide
-		# whether to keep the header or not and append the rows
-		# to another 'bulk' csv file.
-		# If the bulk csv file is close to over over 100k rows, then
-		# save it as a copy with a timestamp in the name to make it unique.
-		# Then make a new bulk csv file and do fill it and so on.
+		
 		f = open(file, 'r')
 		reader = csv.reader(f)
 				
 		if count is 0:
-			header = next(reader)	#Remove the header line.
-			self.add_record(header)  #Save the header line.
+			header = next(reader)						#Remove the header line.
+			self.add_record(header)  						#Save the header line.
 		else:
-			next(reader, None)	#Remove the header
+			next(reader, None)							#Remove the header
 		
-		# Add rows to csv writer.
+		
 		for row in reader:
-			self.add_record(row)
+			self.add_record(row)							# Add rows to csv writer.
 		
 		f.close()		
-		self.flush()	# Write out new csv content.
+		self.flush()									# Write out new csv content.
 		
 	def get_row_count(self): 
 		retval = 0
@@ -85,3 +81,5 @@ class CsvWriter(object):
 				logger.log(LoggerType.info, "CSV write success...")
 				logger.log(LoggerType.info, "Output saved to: \"%s\"" % self.filename)
 				logger.log(LoggerType.info, "Finished at: %s" % self.datetime)
+		else:
+			logger.log(LoggerType.info, "No data exists.  Nothing written.")
