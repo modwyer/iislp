@@ -34,13 +34,26 @@ class Logger(object):
 			
 		self.log_funcs = {}
 		self.log_funcs[LoggerType.info] = self.log_info
+		self.log_funcs[LoggerType.error] = self.log_error
+		self.log_funcs[LoggerType.warn] = self.log_warn
+		self.log_funcs[LoggerType.debug] = self.log_debug
+		self.log_funcs[LoggerType.critical] = self.log_critical		
 		
 	def set_verbosity(self, verbose):
 		self.verbose = True if verbose else False
 	
-	def log(self, log_type, msg):		
-		if log_type is LoggerType.info:
-			self.log_funcs[LoggerType.info](msg)
+	def log(self, log_type, msg):
+		self.log_funcs[log_type](msg)		
+		#~ if log_type is LoggerType.info:
+			#~ self.log_funcs[LoggerType.info](msg)
+		#~ if log_type is LoggerType.error:
+			#~ self.log_funcs[LoggerType.error](msg)
+		#~ if log_type is LoggerType.warn:
+			#~ self.log_funcs[LoggerType.warn](msg)
+		#~ if log_type is LoggerType.debug:
+			#~ self.log_funcs[LoggerType.debug](msg)
+		#~ if log_type is LoggerType.critical:
+			#~ self.log_funcs[LoggerType.critical](msg)
 		
 	def log_info(self, msg):
 		if self.verbose: 

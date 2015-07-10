@@ -16,6 +16,14 @@ class AppController(object):
 	Controls the flow of the scripts that read and parse all of the log files.
 	'''	
 	def __init__(self, settings, args):
+		#DEBUG
+		#~ logger.log(LoggerType.info, "TEST LoggerType.info...")
+		#~ logger.log(LoggerType.error, "TEST LoggerType.error...")
+		#~ logger.log(LoggerType.warn, "TEST LoggerType.warn...")
+		#~ logger.log(LoggerType.debug, "TEST LoggerType.debug...")
+		#~ logger.log(LoggerType.critical, "TEST LoggerType.critical...")
+		#DEBUG
+		
 		logger.log(LoggerType.info, "Getting configuration settings...")
 		self.config_mgr 		= ConfigMgr()								
 		self.csv_dir 		= self.config_mgr.get_value(ConfigKeys.csv)
@@ -29,6 +37,15 @@ class AppController(object):
 		
 		if "verbose" in self.args.keys():
 			logger.set_verbosity(self.args["verbose"])
+		
+		# Set config value for 'bulk' key.  This decides whether
+		# to write a big 100k row csv file or one csv file per log type
+		# per log file.
+		if "bulk" in self.args.keys():
+			bulk_value = "true"
+		else:
+			bulk_value = "false"
+		self.config_mgr.update_value("info", "bulk", bulk_value)
 
 		launch_watcher(self.file_mover_path)
 		time.sleep(2)												#Give the file watcher a chance to get settled.

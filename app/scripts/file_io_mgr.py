@@ -9,9 +9,12 @@ config_mgr = ConfigMgr()
 date_as_var_format = '%Y_%m_%d_%H_%M_%S_%f'
 date_format = '%Y-%m-%d %H:%M:%S.%f'
 
+is_bulk = config_mgr.get_value(ConfigKeys.bulk)
 logs_done_log_path = config_mgr.get_value(ConfigKeys.logging) + "\\logs_done.txt"
+
 #~ log_file_dir = config_mgr.get_value(ConfigKeys.log_done)  #LIVE
 log_file_dir = "D:\\workspace\\python\\IIS_LOG_FILE_VIEWER\\iis_log_files_big" #TESTING
+
 iis_log_dir = config_mgr.get_value(ConfigKeys.iis_logs)
 
 logger = Logger()
@@ -32,6 +35,7 @@ class FileIOMgr(object):
 		# Get the stored list of logs that have been done already.
 		logs_done_list = get_logs_done()
 		logger.log(LoggerType.info, "Logs 'done' list count: %s" % len(logs_done_list))
+		
 		# Get last modified datetimes from all files in log_done.
 		files_list = get_file_dates_sortAsc(log_file_dir)	
 			
@@ -49,12 +53,12 @@ class FileIOMgr(object):
 		# Take the last 12 characters off each full file name (like the example above)
 		# and save them into a list.
 		file_names = list(map(lambda x: x[-12:], new_logs_files))
-					
-		logger.log_info (file_names)
+		
+		logger.log(LoggerType.info, "Filenames: %s" % file_names)
 		
 		# Copy the file_names from log_file_dir to iis_log_dir
 		for fn in file_names:
-			shutil.copy2(log_file_dir + "\\" + fn, iis_log_dir + fn)
+			shutil.copy2(log_file_dir + "\\" + fn, iis_log_dir + "\\" + fn)
 		
 		return list(map(lambda x: log_file_dir + "\\" + x[-12:], new_logs_files))	
 	

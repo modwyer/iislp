@@ -16,7 +16,7 @@ def process_command_line(argv):
 	arguments = {}
 	
 	try:
-		opts, args = getopt.getopt(argv, "h:v", ["help","verbose="])
+		opts, args = getopt.getopt(argv, "h:v:b", ["help","verbose=","bulk="])
 		#~ opts, args = getopt.getopt(argv, "hd:",["help","directory="])
 		#~ opts, args = getopt.getopt(argv, "h:",["help"])
 	except getopt.GetoptError:
@@ -33,7 +33,9 @@ def process_command_line(argv):
 			print ('Usage: iislp.py')
 			sys.exit()
 		elif opt in ("-v", "--verbose"):
-			arguments["verbose"] = True;
+			arguments["verbose"] = True
+		elif opt in ("-b", "--bulk"):
+			arguments["bulk"] = True
 		#~ elif opt in ("-d", "--directory"):
 			#~ arguments["directory"] = arg
 	

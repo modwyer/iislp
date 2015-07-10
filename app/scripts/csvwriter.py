@@ -45,11 +45,10 @@ class CsvWriter(object):
 		reader = csv.reader(f)
 				
 		if count is 0:
-			header = next(reader)						#Remove the header line.
-			self.add_record(header)  						#Save the header line.
+			header = next(reader)						#Read and save the header line.
+			self.add_record(header)  						#Add the header line as a row.
 		else:
-			next(reader, None)							#Remove the header
-		
+			next(reader, None)							#Remove the header line.
 		
 		for row in reader:
 			self.add_record(row)							# Add rows to csv writer.

@@ -14,8 +14,9 @@ class FileMover(object):
 		
 		self.config_mgr = ConfigMgr()											
 		self.path_to_watch 	= self.config_mgr.get_value(ConfigKeys.csv)		# Get the path to where the app-generated CSV files end up.
-		self.bulk 			= self.config_mgr.get_value(ConfigKeys.bulk)		# Create bulk CSV file or not?
-		self.csv_store 		= self.config_mgr.get_value(ConfigKeys.csv_stor)	# Get the path to save CSV files.		
+		self.bulk 			= self.config_mgr.get_value(ConfigKeys.bulk)		# Create bulk CSV file or not?	
+		print ("self.bulk: ", self.bulk)
+		self.csv_store 		= self.config_mgr.get_value(ConfigKeys.csv_stor)	# Get the path to save CSV files.			
 		
 		self.before = dict ([(f, None) for f in os.listdir (self.path_to_watch)])		# Get all files in path_to_watch.
 
@@ -38,15 +39,17 @@ class FileMover(object):
 						try:
 							self.move_file(file)
 						except ArgumentError as ae:
-							logger.log_error(ae.expr, ae.msg)
+							logger.log(LoggerType.error, ae.expr, ae.msg)
 					break
 			before = after
 	
 	def move_file(self, file=None):	
 		logger.log(LoggerType.info,  "Moving file: %s" % file)
-		
+
 		if file is None:
+			logger.log(LoggerType.critical,  "FileMover::move_file::File is None.")
 			return
+			
 		bulk = self.bulk.lower()
 		
 		if bulk in 'false':
@@ -58,8 +61,7 @@ def move_csv(src, csv_stor):
 	fname = src[-16:]											# Get the name of the src file.
 	shutil.copy2(src, csv_stor)										# Copy the src file to the destination directory.
 	
-	if os.path.isfile(csv_stor + "\\" + fname):
-		remove_file(src)										# Remove the CSV file from the CSV directory.
+	remove_file(src)										# Remove the CSV file from the CSV directory.
 	
 def move_bulk(file, bulk_csv_dir):	
 	log_type = file[-16:-13] 										#Ex. 'cmu', 'cma'
