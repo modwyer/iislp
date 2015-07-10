@@ -19,8 +19,7 @@ Protocol Status		sc-status		The status of the action, in HTTP or FTP terms.
 Protocol Substatus  	sc-substatus  	The substatus error code.
 Win32 Status		sc-win32-status	The status of the action, in terms used by Microsoft Windows.
 
-Member names: date, time, serverIp, clientAction, stem, query, serverPort, username, clientIp, 
-userAgent, protocolStatus, protocolSubstatus, win32status
+Member names: date, time, serverIp, clientAction, stem, query, serverPort, username, clientIp, userAgent, protocolStatus, protocolSubstatus, win32status
 '''
 class LogFields(Enum):
 	date 				= 0

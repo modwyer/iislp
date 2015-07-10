@@ -48,30 +48,29 @@ class FileMover(object):
 			logger.log(LoggerType.critical,  "FileMover::move_file::File is None.")
 			return
 			
-		self.bulk = self.config_mgr.get_value(ConfigKeys.bulk)		# Create bulk CSV file or not?
-		bulk = self.bulk.lower()			
-		print ("self.bulk: ", self.bulk)
+		self.bulk = self.config_mgr.get_value(ConfigKeys.bulk)				# Create bulk CSV file or not?
+		bulk = self.bulk.lower()		
 		
-		if bulk in 'false':
+		if bulk in 'false':			
 			move_csv(file, self.csv_store)
 		if bulk in 'true':
 			move_bulk(file, self.config_mgr.get_value(ConfigKeys.bulk_csv) )			
 
 def move_csv(src, csv_stor):		
-	fname = src[-16:]											# Get the name of the src file.
-	shutil.copy2(src, csv_stor)										# Copy the src file to the destination directory.
-	
-	remove_file(src)										# Remove the CSV file from the CSV directory.
+	#~ fname = src[-16:]												# Get the name of the src file.
+	shutil.copy2(src, csv_stor)											# Copy the src file to the destination directory.
+	time.sleep(2)													# Just in case pause.
+	remove_file(src)												# Remove the CSV file from the CSV directory.
 	
 def move_bulk(file, bulk_csv_dir):	
-	log_type = file[-16:-13] 										#Ex. 'cmu', 'cma'
+	log_type = file[-16:-13] 											#Ex. 'cmu', 'cma'
 	csv_file = "\\" + log_type + "_bulk.csv"
-	dest_dir = bulk_csv_dir + csv_file;								# Create dest dir path.
+	dest_dir = bulk_csv_dir + csv_file;									# Create dest dir path.
 			
 	csv_writer = CsvWriter(dest_dir)
-	csv_writer.append_file(file)									# Add 'file' rows to bulk csv file for 'log_type'.
+	csv_writer.append_file(file)										# Add 'file' rows to bulk csv file for 'log_type'.
 			
-	remove_file(file)											# Remove the CSV file from the CSV directory.
+	remove_file(file)												# Remove the CSV file from the CSV directory.
 
 def remove_file(file):
 	if os.path.isfile(file):

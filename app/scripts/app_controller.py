@@ -1,4 +1,4 @@
-import sys, os, psutil, subprocess, time
+import sys, os, psutil, shutil, subprocess, time
 from os import path
 from scripts.logfilereader import LogFileReader
 from scripts.logprocessor import LogProcessor
@@ -36,16 +36,16 @@ class AppController(object):
 		# to write a big 100k row csv file or one csv file per log type
 		# per log file.
 		if "bulk" in self.args.keys():
-			bulk_value = "true"
+			self.bulk_value = "true"
 		else:
-			bulk_value = "false"
+			self.bulk_value = "false"
 			
 		# Get settings info from configuration file.
 		logger.log(LoggerType.info, "Getting configuration settings...")	
 		self.config_mgr 		= ConfigMgr()		
 		self.csv_dir 		= self.config_mgr.get_value(ConfigKeys.csv)
 		self.file_mover_path 	= self.config_mgr.get_value(ConfigKeys.file_mover)		
-		self.config_mgr.update_value("info", "bulk", bulk_value)
+		self.config_mgr.update_value("info", "bulk", self.bulk_value)
 		
 		print ("App output sent to: ", self.config_mgr.get_value(ConfigKeys.logging) + "\\run_time.log")
 		print ("Running...")
@@ -68,7 +68,7 @@ class AppController(object):
 				
 		# Wait here until the csv_dir is empty of all files.
 		logger.log(LoggerType.info, "Done reading log files...")		
-		logger.log(LoggerType.info, "Waiting for the CSV dir to empty out...")
+		logger.log(LoggerType.info, "Waiting for processing to complete...")
 		
 		while True:
 			csvs = [f for f in os.listdir(self.csv_dir) if os.path.isfile(os.path.join(self.csv_dir,f))]
@@ -76,9 +76,14 @@ class AppController(object):
 				logger.log(LoggerType.info, "CSV directory is empty...")
 				break
 		
+		
+		print ("Cleaning up...")
+		if self.bulk_value in "true":
+			bulk_logs_path = self.config_mgr.get_value(ConfigKeys.bulk_logs)
+			shutil.rmtree(bulk_logs_path)
+			
 		logger.log(LoggerType.info, "Killing all processes...")
 		me = os.getpid()
-		print ("Cleaning up...")
 		kill_proc_tree(me)
 
 	def process_batch(self, batch):
@@ -103,7 +108,7 @@ def launch_watcher(filepath):
 	#~ p = subprocess.Popen(['python', 'C:\IIS_LogFile_Viewer\IIS_LogFile_Viewer\scripts\csv_dir_watcher.py'])
 	#~ p = subprocess.Popen(['python', '..\csv_dir_watcher.py'])
 	p = subprocess.Popen(["python", filepath])
-		
+
 def kill_proc_tree(pid, including_parent=True):
 	'''http://stackoverflow.com/questions/1230669/subprocess-deleting-child-processes-in-windows'''
 	parent = psutil.Process(pid)

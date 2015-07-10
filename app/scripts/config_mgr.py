@@ -14,6 +14,7 @@ class ConfigKeys(Enum):
 	log_done 		= 8		#Dir containing all the IIS Log files.
 	file_mover 	= 9		#Path to the file_mover.py file.
 	temp 		= 10 	#Path to a temp directory for use during execution.
+	bulk_logs		= 11		#Path to log files to process for bulk processing.
 
 class ConfigMgr(object):
 	def __init__(self):
@@ -24,7 +25,7 @@ class ConfigMgr(object):
 		#Create a dict with INI section names as KEYs and INI field names as items in a list that is the VALUE.
 		self.section_key_map = {}
 		self.section_key_map['info'] = ['last_updated', 'bulk']
-		self.section_key_map['path'] = ['csv_stor', 'iis_logs', 'logging', 'log_done', 'csv', 'app', 'bulk_csv', 'file_mover', 'temp']	
+		self.section_key_map['path'] = ['csv_stor', 'iis_logs', 'logging', 'log_done', 'csv', 'app', 'bulk_csv', 'file_mover', 'temp', 'bulk_logs']	
 		
 		if not self.dir_exists(self.config_path):
 			self.generate_ini_file()
@@ -49,7 +50,8 @@ class ConfigMgr(object):
 							    'csv_stor': os.path.abspath(os.path.join(self.dir, '..', '..', '..', 'iisLogCsv')),
 							    'log_done': os.path.abspath(os.path.join(self.dir, "Q:\\soft\Leads\\web\\log_done")),
 							    'file_mover': os.path.abspath(os.path.join(self.dir, '..', 'file_mover.py')),
-							    'temp': os.path.abspath(os.path.join(self.dir, '..', '..', 'temp'))}
+							    'temp': os.path.abspath(os.path.join(self.dir, '..', '..', 'temp')),
+							    'bulk_logs': os.path.abspath(os.path.join(self.dir, '..', '..', 'temp\\bulk_logs'))}
 			
 			with open(self.config_path, 'w') as configfile:
 				self.settings.write(configfile)

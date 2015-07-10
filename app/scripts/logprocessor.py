@@ -11,7 +11,6 @@ logger = Logger()
 class LogProcessor(object):
 	def __init__(self):		
 		self.log_uri_stems = ["/cmupdate.asp", "/cmaction.asp"]
-		#~ self.log_uri_stems = ["/cmupdate.asp"]
 		self.log_counter = {}				
 		self.parser = LogParser()
 	
@@ -47,7 +46,7 @@ class LogProcessor(object):
 					log_bundle.save_dict(uri_stem, log_dict)
 					self.log_counter_uptick(uri_stem)
 		
-		#Write count info out to console.
+		# Logging info.
 		if "/cmupdate.asp" in self.log_counter.keys():
 			logger.log(LoggerType.info, "CMUpdate # logs: %s" % self.log_counter["/cmupdate.asp"])
 		if "/cmaction.asp" in self.log_counter.keys():
