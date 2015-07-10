@@ -24,17 +24,11 @@ class AppController(object):
 		#~ logger.log(LoggerType.critical, "TEST LoggerType.critical...")
 		#DEBUG
 		
-		logger.log(LoggerType.info, "Getting configuration settings...")
-		self.config_mgr 		= ConfigMgr()								
-		self.csv_dir 		= self.config_mgr.get_value(ConfigKeys.csv)
-		self.file_mover_path 	= self.config_mgr.get_value(ConfigKeys.file_mover)
-
-		print ("App output sent to: ", self.config_mgr.get_value(ConfigKeys.logging) + "\\run_time.log")
-		print ("Running...")
-		
+		# Get the command line args and settings.
 		self.settings = settings
 		self.args = args	
 		
+		# Display logging output to console during execution?
 		if "verbose" in self.args.keys():
 			logger.set_verbosity(self.args["verbose"])
 		
@@ -45,7 +39,16 @@ class AppController(object):
 			bulk_value = "true"
 		else:
 			bulk_value = "false"
+			
+		# Get settings info from configuration file.
+		logger.log(LoggerType.info, "Getting configuration settings...")	
+		self.config_mgr 		= ConfigMgr()		
+		self.csv_dir 		= self.config_mgr.get_value(ConfigKeys.csv)
+		self.file_mover_path 	= self.config_mgr.get_value(ConfigKeys.file_mover)		
 		self.config_mgr.update_value("info", "bulk", bulk_value)
+		
+		print ("App output sent to: ", self.config_mgr.get_value(ConfigKeys.logging) + "\\run_time.log")
+		print ("Running...")
 
 		launch_watcher(self.file_mover_path)
 		time.sleep(2)												#Give the file watcher a chance to get settled.

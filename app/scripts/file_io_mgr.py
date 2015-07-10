@@ -4,18 +4,18 @@ from scripts.logger import LoggerType
 from scripts.config_mgr import ConfigMgr
 from scripts.config_mgr import ConfigKeys
 
+# Create date formats.
+date_as_var_format 	= '%Y_%m_%d_%H_%M_%S_%f'
+date_format 		= '%Y-%m-%d %H:%M:%S.%f'
+
+# Get some configuration settings.
 config_mgr = ConfigMgr()
 
-date_as_var_format = '%Y_%m_%d_%H_%M_%S_%f'
-date_format = '%Y-%m-%d %H:%M:%S.%f'
+logs_done_log_path 	= config_mgr.get_value(ConfigKeys.logging) + "\\logs_done.txt"
+bulk_logs_dir		= config_mgr.get_value(ConfigKeys.temp) + "\\bulk_logs"
+print ("bulk_logs_dir: ", bulk_logs_dir)
 
-is_bulk = config_mgr.get_value(ConfigKeys.bulk)
-logs_done_log_path = config_mgr.get_value(ConfigKeys.logging) + "\\logs_done.txt"
-
-#~ log_file_dir = config_mgr.get_value(ConfigKeys.log_done)  #LIVE
-log_file_dir = "D:\\workspace\\python\\IIS_LOG_FILE_VIEWER\\iis_log_files_big" #TESTING
-
-iis_log_dir = config_mgr.get_value(ConfigKeys.iis_logs)
+iis_log_dir 		= config_mgr.get_value(ConfigKeys.iis_logs)
 
 logger = Logger()
 
@@ -32,6 +32,9 @@ class FileIOMgr(object):
 		We also copy the log files to the 'iis_log_dir'	so the app 
 		can get at them.		
 		'''
+		# Get the 'log_file_dir', where the app should look for new logs to process.
+		log_file_dir = get_log_file_dir()
+		
 		# Get the stored list of logs that have been done already.
 		logs_done_list = get_logs_done()
 		logger.log(LoggerType.info, "Logs 'done' list count: %s" % len(logs_done_list))
@@ -61,7 +64,25 @@ class FileIOMgr(object):
 			shutil.copy2(log_file_dir + "\\" + fn, iis_log_dir + "\\" + fn)
 		
 		return list(map(lambda x: log_file_dir + "\\" + x[-12:], new_logs_files))	
+
+def get_log_file_dir():
+	'''
+	If we are processing in bulk then 100k or so rows go into a csv file.
+	Otherwise we process one log file and generate a CSV file per log type.
+	For bulk processing we process all the logs found in 'bulk_logs_dir'.
+	Otherwise we look in the 'log_done' dir where the IIS logs are stored.
+	'''
+	is_bulk = config_mgr.get_value(ConfigKeys.bulk)
 	
+	if is_bulk in "true":
+		log_file_dir = bulk_logs_dir
+	else:
+		log_file_dir 	= "D:\\workspace\\python\\IIS_LOG_FILE_VIEWER\\iis_log_files_big" 	#TESTING
+		#~ log_file_dir 		= config_mgr.get_value(ConfigKeys.log_done)  					#LIVE	
+	
+	print ("log_file_dir: ", log_file_dir)
+	return log_file_dir
+
 def get_file_dates_sortAsc(path):
 	file_dates = []
 	path_full = path + "\\"

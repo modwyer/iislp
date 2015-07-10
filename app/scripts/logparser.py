@@ -26,6 +26,6 @@ class LogParser(object):
 	def parse_iis_log(self, uuid, log):
 		self.logQs 		= log.get_field_value(LogFields.query)	#Get the log's QueryString.
 		query_dict 	= dict(parse_qsl(self.logQs))  			#Parse the query string to a list of tuples and cast to a dict.
-		log_dict 		= self.get_basic_info(log, query_dict)  	#Add the log basic info to dict
+		log_dict 		= self.get_basic_info(log, query_dict)  	#Add the 'log basic' info to dict
 		log_dict["key"] 	= uuid							#Add the UUID as the key for the log.
 		return log_dict

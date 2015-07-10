@@ -13,9 +13,7 @@ class FileMover(object):
 		logger.log(LoggerType.info, "FileMover is running...")
 		
 		self.config_mgr = ConfigMgr()											
-		self.path_to_watch 	= self.config_mgr.get_value(ConfigKeys.csv)		# Get the path to where the app-generated CSV files end up.
-		self.bulk 			= self.config_mgr.get_value(ConfigKeys.bulk)		# Create bulk CSV file or not?	
-		print ("self.bulk: ", self.bulk)
+		self.path_to_watch 	= self.config_mgr.get_value(ConfigKeys.csv)		# Get the path to where the app-generated CSV files end up.		
 		self.csv_store 		= self.config_mgr.get_value(ConfigKeys.csv_stor)	# Get the path to save CSV files.			
 		
 		self.before = dict ([(f, None) for f in os.listdir (self.path_to_watch)])		# Get all files in path_to_watch.
@@ -50,7 +48,9 @@ class FileMover(object):
 			logger.log(LoggerType.critical,  "FileMover::move_file::File is None.")
 			return
 			
-		bulk = self.bulk.lower()
+		self.bulk = self.config_mgr.get_value(ConfigKeys.bulk)		# Create bulk CSV file or not?
+		bulk = self.bulk.lower()			
+		print ("self.bulk: ", self.bulk)
 		
 		if bulk in 'false':
 			move_csv(file, self.csv_store)

@@ -53,7 +53,8 @@ class LogFileReader(object):
 					#Store the Log object, using a newly generated UUID as the key.
 					self.log_objects[uuid.uuid4()] = newLog	
 				except ArgumentError as ae:
-					logger.log_error(ae.expr, ae.msg)		
+					err = "Expr: " + ae.expr + "_Msg: " + ae.msg
+					logger.log(LoggerType.error, err)		
 		
 		self.file.close()
 		

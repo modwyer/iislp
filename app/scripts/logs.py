@@ -1,6 +1,5 @@
 import sys
 from enum import Enum
-#~ from writetexttofile import Writer
 from scripts.exceptions import ArgumentError
 
 '''
