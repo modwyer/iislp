@@ -42,8 +42,6 @@ class FileMover(object):
 			before = after
 	
 	def move_file(self, file=None):	
-		logger.log(LoggerType.info,  "Moving file: %s" % file)
-
 		if file is None:
 			logger.log(LoggerType.critical,  "FileMover::move_file::File is None.")
 			return
@@ -51,9 +49,11 @@ class FileMover(object):
 		self.bulk = self.config_mgr.get_value(ConfigKeys.bulk)				# Create bulk CSV file or not?
 		bulk = self.bulk.lower()		
 		
-		if bulk in 'false':			
+		if bulk in 'false':
+			logger.log(LoggerType.info,  "Moving csv file to iisLogCsv dir: %s" % file)			
 			move_csv(file, self.csv_store)
 		if bulk in 'true':
+			logger.log(LoggerType.info,  "Appending csv file to bulk csv: %s" % file)
 			move_bulk(file, self.config_mgr.get_value(ConfigKeys.bulk_csv) )			
 
 def move_csv(src, csv_stor):		

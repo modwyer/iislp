@@ -30,7 +30,11 @@ class FileIOMgr(object):
 		can get at them.		
 		'''
 		# Get the 'log_file_dir', where the app should look for new logs to process.
+		# If that directory does not exist then nothing doing.  
 		log_file_dir = get_log_file_dir()
+		if os.path.exists(log_file_dir) is False:
+			logger.log(LoggerType.critical, "FileIOMgr::get_file_dates_sortAsc::ERROR: IIS Log file dir does not exist.")
+			return
 		
 		# Get the stored list of logs that have been done already.
 		logs_done_list = get_logs_done()
@@ -80,7 +84,7 @@ def get_log_file_dir():
 	logger.log(LoggerType.info, "IIS Log file dir: %s" % log_file_dir)
 	return log_file_dir
 
-def get_file_dates_sortAsc(path):
+def get_file_dates_sortAsc(path=None):
 	file_dates = []
 	path_full = path + "\\"
 	

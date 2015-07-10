@@ -19,7 +19,7 @@ class ConfigKeys(Enum):
 class ConfigMgr(object):
 	def __init__(self):
 		self.dir = os.path.dirname(os.path.abspath(__file__))
-		self.config_path = os.path.abspath(os.path.join(self.dir, '..', '..', 'config\\settings.ini'))		
+		self.config_path = os.path.abspath(os.path.join(self.dir, '..', '..', '..' '\\config\\settings.ini'))		
 		self.settings= configparser.RawConfigParser()
 		
 		#Create a dict with INI section names as KEYs and INI field names as items in a list that is the VALUE.
