@@ -43,17 +43,7 @@ class Logger(object):
 		self.verbose = True if verbose else False
 	
 	def log(self, log_type, msg):
-		self.log_funcs[log_type](msg)		
-		#~ if log_type is LoggerType.info:
-			#~ self.log_funcs[LoggerType.info](msg)
-		#~ if log_type is LoggerType.error:
-			#~ self.log_funcs[LoggerType.error](msg)
-		#~ if log_type is LoggerType.warn:
-			#~ self.log_funcs[LoggerType.warn](msg)
-		#~ if log_type is LoggerType.debug:
-			#~ self.log_funcs[LoggerType.debug](msg)
-		#~ if log_type is LoggerType.critical:
-			#~ self.log_funcs[LoggerType.critical](msg)
+		self.log_funcs[log_type](msg)	
 		
 	def log_info(self, msg):
 		if self.verbose: 

@@ -16,7 +16,7 @@ def process_command_line(argv):
 	arguments = {}
 	
 	try:
-		opts, args = getopt.getopt(argv, "h:v:b", ["help","verbose=","bulk="])
+		opts, args = getopt.getopt(argv, "h:vb", ["help","verbose=","bulk="])
 		#~ opts, args = getopt.getopt(argv, "hd:",["help","directory="])
 		#~ opts, args = getopt.getopt(argv, "h:",["help"])
 	except getopt.GetoptError:
@@ -35,6 +35,7 @@ def process_command_line(argv):
 		elif opt in ("-v", "--verbose"):
 			arguments["verbose"] = True
 		elif opt in ("-b", "--bulk"):
+			logger.log(LoggerType.info, "Bulk log processing...")
 			arguments["bulk"] = True
 		#~ elif opt in ("-d", "--directory"):
 			#~ arguments["directory"] = arg
