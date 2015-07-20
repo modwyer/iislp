@@ -20,10 +20,10 @@ class CsvWriter(object):
 		# a timestamp in the name, then remove the large CSV file  so a new 
 		# CSV file will be created in the next 'flush'.
 		if self.row_count > 15000:		
-			logger.log(LoggerType.info, "Bulk CSV file reached 100k rows...")
+			logger.log(LoggerType.info, "CSV file reached 100k rows...")
 			
 			# Make the filename of the copy.
-			copy_name = self.filename[:-4]					# All but '.csv'.
+			copy_name = self.filename[:-4]					# All of the filename but '.csv'.
 			t = time.localtime()
 			timestamp = time.strftime('%y%m%d_%H%M%S', t)		# Timestamp: Ex. 150707_202456
 			dest = copy_name + "_" + timestamp + ".csv"		# All together as full filename.
@@ -32,9 +32,9 @@ class CsvWriter(object):
 			
 			shutil.copy2(self.filename, dest)					# Save a copy of the file with the new name.
 			
-			if os.path.exists(dest):						# If the version just saved exists...
+			if os.path.exists(dest):						# If the version just saved exists then...
 				logger.log(LoggerType.info, "Deleting: %s" % self.filename)
-				os.remove(self.filename)					# Remove the current bulk csv file.
+				os.remove(self.filename)					# Remove the current bulk csv file...
 			else:
 				raise ArgumentError("CsvWriter:__init__:ERROR!", "dest %s does not exist!" % dest)
 		

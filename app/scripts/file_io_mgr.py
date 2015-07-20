@@ -69,7 +69,8 @@ class FileIOMgr(object):
 def get_log_file_dir():
 	'''
 	If we are processing in bulk then 100k or so rows go into a csv file.
-	Otherwise we process one log file and generate a CSV file per log type.
+	Otherwise we process one log file and generate a CSV file per log type,
+	for that one log file.
 	For bulk processing we process all the logs found in 'bulk_logs_dir'.
 	Otherwise we look in the 'logs_done' dir where the IIS logs are stored.
 	'''

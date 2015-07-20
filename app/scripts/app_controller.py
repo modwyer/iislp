@@ -60,6 +60,8 @@ class AppController(object):
 				
 		'''Get a list of all the files found in logs_dir.'''
 		files = self.file_io_mgr.get_files()
+		if files is None:
+			logger.log(LoggerType.critical, "No log files found...")
 		logger.log(LoggerType.info, "Found %s log files..." % len(files))
 		
 		'''Process all of the files found in logs_dir in 10 log batches.'''
@@ -77,10 +79,12 @@ class AppController(object):
 				break
 		
 		
-		print ("Cleaning up...")
+		logger.log(LoggerType.info, "Cleaning up...")
 		if self.bulk_value in "true":
+			# Remove the bulk_logs directory and all sub files.
 			bulk_logs_path = self.config_mgr.get_value(ConfigKeys.bulk_logs)
-			shutil.rmtree(bulk_logs_path)
+			#~ shutil.rmtree(bulk_logs_path)
+			clear_directory(bulk_logs_path)
 			
 		logger.log(LoggerType.info, "Killing all processes...")
 		me = os.getpid()
@@ -97,6 +101,17 @@ class AppController(object):
 			self.log_bundle = self.log_processor.process(self.log_bundle)   		# Process the raw logs, returning a bundle of logs.					
 			self.log_bundle.flush(filename)								# Save log file log info out to a csv file.						
 			self.log_bundle.clear()									# Clear the log bundle so it can be filled again.
+	
+def clear_directory(dir_path):
+	'''http://stackoverflow.com/a/185941'''
+	for f in os.listdir(dir_path):
+		file_path = os.path.join(dir_path, f)
+		try:
+			if os.path.isfile(file_path):
+				os.unlink(file_path)
+			#elif os.path.isdir(file_path): shutil.rmtree(file_path) # Remove sub directories too.
+		except Exception as e:
+			print("clear_directory::ERROR: ", e)
 	
 def get_batches(lst, n):
 	""" Yield successive n-sized chunks from lst."""    

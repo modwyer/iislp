@@ -57,9 +57,8 @@ class FileMover(object):
 			move_bulk(file, self.config_mgr.get_value(ConfigKeys.bulk_csv) )			
 
 def move_csv(src, csv_stor):		
-	#~ fname = src[-16:]												# Get the name of the src file.
 	shutil.copy2(src, csv_stor)											# Copy the src file to the destination directory.
-	time.sleep(2)													# Just in case pause.
+	time.sleep(2)													# Just in case pause.  Had very random failures where file not available.
 	remove_file(src)												# Remove the CSV file from the CSV directory.
 	
 def move_bulk(file, bulk_csv_dir):	

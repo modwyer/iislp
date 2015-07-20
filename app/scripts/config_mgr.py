@@ -27,7 +27,7 @@ class ConfigMgr(object):
 		self.section_key_map['info'] = ['last_updated', 'bulk']
 		self.section_key_map['path'] = ['csv_stor', 'iis_logs', 'logging', 'log_done', 'csv', 'app', 'bulk_csv', 'file_mover', 'temp', 'bulk_logs']	
 		
-		if not self.dir_exists(self.config_path):
+		if not os.path.exists(self.config_path):
 			self.generate_ini_file()
 		else:
 			self.update_value('info', 'last_updated', datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))			
