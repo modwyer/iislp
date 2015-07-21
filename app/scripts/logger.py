@@ -43,7 +43,7 @@ class Logger(object):
 		self.verbose = True if verbose else False
 	
 	def log(self, log_type, msg):
-		self.log_funcs[log_type](msg)	
+		self.log_funcs[log_type](msg)	# Execute a stored function.
 		
 	def log_info(self, msg):
 		if self.verbose: 

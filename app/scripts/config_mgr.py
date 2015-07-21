@@ -15,6 +15,7 @@ class ConfigKeys(Enum):
 	file_mover 	= 9		#Path to the file_mover.py file.
 	temp 		= 10 	#Path to a temp directory for use during execution.
 	bulk_logs		= 11		#Path to log files to process for bulk processing.
+	bulk_csv_max 	= 12		#Record count limit.  (Eg. If CSV count > bulk_csv_max, save CSV as a back-up copy)
 
 class ConfigMgr(object):
 	def __init__(self):
@@ -24,7 +25,7 @@ class ConfigMgr(object):
 		
 		#Create a dict with INI section names as KEYs and INI field names as items in a list that is the VALUE.
 		self.section_key_map = {}
-		self.section_key_map['info'] = ['last_updated', 'bulk']
+		self.section_key_map['info'] = ['last_updated', 'bulk', 'bulk_csv_max']
 		self.section_key_map['path'] = ['csv_stor', 'iis_logs', 'logging', 'log_done', 'csv', 'app', 'bulk_csv', 'file_mover', 'temp', 'bulk_logs']	
 		
 		if not os.path.exists(self.config_path):
@@ -41,7 +42,8 @@ class ConfigMgr(object):
 		else:
 			print ("Creating settings.ini file...")
 			self.settings['info'] = {'last_updated': datetime.datetime.now(),
-							    'bulk': 'false'}			
+							    'bulk': 'false',
+							    'bulk_csv_max': '100000'}			
 			self.settings['path'] = {'iis_logs': os.path.abspath(os.path.join(self.dir, '..', '..', 'iis_log')),
 							    'csv': os.path.abspath(os.path.join(self.dir, '..', 'csv')),
 							    'bulk_csv': os.path.abspath(os.path.join(self.dir, '..', 'bulk_csv')),

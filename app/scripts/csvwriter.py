@@ -4,6 +4,8 @@ from scripts.writetexttofile import Writer
 from scripts.exceptions import ArgumentError
 from scripts.logger import Logger
 from scripts.logger import LoggerType
+from scripts.config_mgr import ConfigMgr
+from scripts.config_mgr import ConfigKeys
 
 logger = Logger()
 
@@ -16,14 +18,18 @@ class CsvWriter(object):
 		self.filename = outputpath 							# CSV file to write to.
 		self.row_count = self.get_row_count()				# Total rows in the outputpath CSV file.
 		
+		self.config_mgr = ConfigMgr()
+		max_row_count = int(self.config_mgr.get_value(ConfigKeys.bulk_csv_max))
+		
 		# If the CSV file already has 100k+ rows then save a copy of it with
 		# a timestamp in the name, then remove the large CSV file  so a new 
 		# CSV file will be created in the next 'flush'.
-		if self.row_count > 15000:		
-			logger.log(LoggerType.info, "CSV file reached 100k rows...")
-			
+		if self.row_count > max_row_count:		
 			# Make the filename of the copy.
 			copy_name = self.filename[:-4]					# All of the filename but '.csv'.
+			
+			logger.log(LoggerType.info, "CSV file, %s, reached 100k rows..." % copy_name[-8:])
+			
 			t = time.localtime()
 			timestamp = time.strftime('%y%m%d_%H%M%S', t)		# Timestamp: Ex. 150707_202456
 			dest = copy_name + "_" + timestamp + ".csv"		# All together as full filename.
@@ -39,6 +45,11 @@ class CsvWriter(object):
 				raise ArgumentError("CsvWriter:__init__:ERROR!", "dest %s does not exist!" % dest)
 		
 	def append_file(self, file):
+		logger.log(LoggerType.debug, "append_file::%s" % file)
+		if not os.path.exists(file):
+			logger.log(LoggerType.error, "append_file::File Not Found! %s" % file)
+			return
+			
 		count = self.get_row_count()
 		
 		f = open(file, 'r')
