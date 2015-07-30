@@ -19,7 +19,7 @@ class FileMover(object):
 		self.before = dict ([(f, None) for f in os.listdir (self.path_to_watch)])		# Get all files in path_to_watch.
 
 	def run(self):
-		'''http://timgolden.me.uk/python/win32_how_do_i/watch_directory_for_changes.html'''
+		'''Adapted from: http://timgolden.me.uk/python/win32_how_do_i/watch_directory_for_changes.html'''
 		while 1:
 			time.sleep (1)
 			after = dict ([(f, None) for f in os.listdir (self.path_to_watch)])  		# Get all files in path_to_watch again.

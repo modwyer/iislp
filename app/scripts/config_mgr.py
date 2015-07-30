@@ -16,7 +16,8 @@ class ConfigKeys(Enum):
 	temp 		= 10 	#Path to a temp directory for use during execution.
 	bulk_logs		= 11		#Path to log files to process for bulk processing.
 	bulk_csv_max 	= 12		#Record count limit.  (Eg. If CSV count > bulk_csv_max, save CSV as a back-up copy)
-	logsdone_log	= 13		#Path of log file that keeps track of what logs have been processed.
+	logsdone_log	= 13		#Path of the file that keeps track of what logs have been processed.
+	runtime_log	= 14		#Path of the log file written to during execution.
 
 class ConfigMgr(object):
 	def __init__(self):
@@ -27,7 +28,7 @@ class ConfigMgr(object):
 		#Create a dict with INI section names as KEYs and INI field names as items in a list that is the VALUE.
 		self.section_key_map = {}
 		self.section_key_map['info'] = ['last_updated', 'bulk', 'bulk_csv_max']
-		self.section_key_map['path'] = ['csv_stor', 'iis_logs', 'logging', 'log_done', 'csv', 'app', 'bulk_csv', 'file_mover', 'temp', 'bulk_logs', 'logsdone_log']	
+		self.section_key_map['path'] = ['csv_stor', 'iis_logs', 'logging', 'log_done', 'csv', 'app', 'bulk_csv', 'file_mover', 'temp', 'bulk_logs', 'logsdone_log', 'runtime_log']	
 		
 		if not os.path.exists(self.config_path):
 			self.generate_ini_file()
@@ -55,7 +56,8 @@ class ConfigMgr(object):
 							    'file_mover': os.path.abspath(os.path.join(self.dir, '..', 'file_mover.py')),
 							    'temp': os.path.abspath(os.path.join(self.dir, '..', '..', 'temp')),
 							    'bulk_logs': os.path.abspath(os.path.join(self.dir, '..', '..', 'temp\\bulk_logs')),
-							    'logsdone_log': os.path.abspath(os.path.join(self.dir, '..', '..', 'app_logs\\logs_done.txt'))}
+							    'logsdone_log': os.path.abspath(os.path.join(self.dir, '..', '..', 'app_logs\\logs_done.txt')),
+							    'runtime_log': os.path.abspath(os.path.join(self.dir, '..', '..', 'app_logs\\run_time.log'))}
 			
 			with open(self.config_path, 'w') as configfile:
 				self.settings.write(configfile)
