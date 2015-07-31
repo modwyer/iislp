@@ -28,14 +28,21 @@ class Controller():
 	def __init__(self, 
 			parent, 
 			queue, 
-			end_runlog_watch_cmd):
+			pause_runlog_thread,
+			start_runlog_thread):
 		print ("Init m and v...")
 		
 		self.parent = parent
 		self.queue = queue
 		
-		self.end_runlog_watch_cmd = end_runlog_watch_cmd
+		# Access methods from parent.
+		self.pause_runlog_thread = pause_runlog_thread
+		self.start_runlog_thread = start_runlog_thread
+		
+		self.is_processing = 0
 		self.runtime_log_count = 0
+		
+		self.final_runlog_output = "Killing all processes"
 		
 		self.config = ConfigMgr()
 		self.toggle_switch = {'Start': 'Running', 'Stop': 'Stopped'}
@@ -59,10 +66,18 @@ class Controller():
 		while (self.queue.qsize()):
 			try:
 				log_info = self.queue.get(0)
-				if len(log_info) > self.runtime_log_count:
-					self.runtime_log_count = len(log_info)
+				len_log_info = len(log_info)
+				# While the app is running, we only display additional entries.
+				# Removed entries will be ignored until more lines are saved.
+				if len_log_info > self.runtime_log_count:
+					self.runtime_log_count = len_log_info
 					print ("GuiThread: self.runtime_log_count : ", self.runtime_log_count )
 					self.view.set_runtime_output(log_info)
+					
+					# Auto-shutdown the runtime_log thread is we read in the
+					# final line of the app output.
+					if self.final_runlog_output in log_info[len_log_info - 1]:
+						self.pause_runlog_thread()
 			except Queue.Empty:
 				pass
 	
@@ -76,24 +91,26 @@ class Controller():
 		self.model.set_procd_logs_list()
 		print ("Done loading...")
 		
+	def runlogs_loaded(self):
+		# Runtime logs are loaded.  Finish up.   
+		if not self.is_processing:
+			self.pause_runlog_thread()
+		
 #event handlers -- add functions called by command attribute in view
 	#~ def someHandelerMethod(self):
 		#~ pass
 		
 	def bulk_process(self):
-		self.view.show_bulk_process_panel()					# Move scrollview to the bulk processing panel.
-		print ("about to start watcher")
-		#~ self.model.start_watch_runtime()		# Start watching the runtime_log file.
-		self.start_runlog_watch_cmd()
-		'''
-		***HERE.  so either you don't end the thread in process_runtime_logs
-		or you do.  then in here you need to start it again som
-		THIS IS NOT STARTING THE WATCHER
-		'''
-		#~ time.sleep(1)
-		#~ self.model.stop_watch_runtime()		# Stop watching the runtime_log file.
-		#~ self.model.start_watch_runtime()
-		#~ self.end_runlog_watch_cmd()
+		print ("starting bulk processing...")
+		self.is_processing = 1		# Let be known we are in the middle of processing log files
+		self.view.show_log_processing_panel()					# Move scrollview to the bulk processing panel.
+		self.start_runlog_thread()
+		#~ outp = ["msg1", "msg2", "msg3", "msg4"]
+		#~ for i in outp:
+			#~ print ("i: ", i)
+			#~ time.sleep(2)
+		#~ self.pause_runlog_thread()
+		
 		
 	def set_procd_logs(self, log_list):
 		list_len = len(log_list)
@@ -170,19 +187,19 @@ class MainView(tk.Frame):
 		#procd_logs: Main container that displays info about the processed logs.
 		#
 		procd_logs = tk.Canvas(parent, width=25, height=650, 
-						background="white", relief="ridge",
+						background="#ffffff", relief="ridge",
 						highlightthickness=0)									
 		procd_logs.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 		#
 		#procd_logs_info_frame: Frame for the top half of the processed logs container.
 		#
-		procd_logs_info_frame = tk.Frame(procd_logs, bg="white", bd=0)
+		procd_logs_info_frame = tk.Frame(procd_logs, bg="#ffffff", bd=0)
 		procd_logs_info_frame.pack()
 		#
 		#procd_logs_info: Container that holds some stats about the processed logs.
 		#
 		procd_logs_info_container = tk.Canvas(procd_logs_info_frame,
-									background="white",
+									background="#ffffff",
 									borderwidth=0,
 									highlightthickness=0, 
 									relief="ridge")
@@ -190,7 +207,7 @@ class MainView(tk.Frame):
 		#
 		#procd_logs_content_frame: Frame to hold a canvas and a vertical scrollbar connected to the canvas.
 		#
-		procd_logs_content_frame = tk.Frame(procd_logs, bg="white", bd=0)
+		procd_logs_content_frame = tk.Frame(procd_logs, bg="#ffffff", bd=0)
 		procd_logs_content_frame.pack(expand=True, fill=tk.Y, padx=15, pady=10)
 		#
 		#scr_proc_logs: Scroll through the list of processed logs.
@@ -224,7 +241,7 @@ class MainView(tk.Frame):
 		#
 		#lbl_total: Total number of logs that have been parsed.
 		#
-		lbl_total_proc_logs = tk.Label(procd_logs_info_container, background="white", text="Total")
+		lbl_total_proc_logs = tk.Label(procd_logs_info_container, background="#ffffff", text="Total")
 		lbl_total_proc_logs.grid(sticky="w", pady=5, padx=5, row=1, column=0)
 		#
 		#tb_total_proc_logs
@@ -239,7 +256,7 @@ class MainView(tk.Frame):
 		#lbl_oldest_proc_log: The oldest log that has been parsed.
 		#
 		lbl_oldest_proc_log = tk.Label(procd_logs_info_container, 
-							background="white", 
+							background="#ffffff", 
 							text="Oldest")
 		lbl_oldest_proc_log.grid(sticky="w", pady=5, padx=5, row=2, column=0)
 		#
@@ -255,7 +272,7 @@ class MainView(tk.Frame):
 		#lbl_newest_proc_log: The oldest log that has been parsed.
 		#
 		lbl_newest_proc_log = tk.Label(procd_logs_info_container, 
-							background="white", 
+							background="#ffffff", 
 							text="Newest")
 		lbl_newest_proc_log.grid(sticky="w", pady=5, padx=5, row=3, column=0)
 		#
@@ -273,19 +290,19 @@ class MainView(tk.Frame):
 		#unprocd_logs: Main container that displays info about the unprocessed logs.
 		#
 		unprocd_logs = tk.Canvas(parent, width=25, height=650, 
-						background="white", relief="ridge",
+						background="#ffffff", relief="ridge",
 						highlightthickness=0)									
 		unprocd_logs.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 		#
 		#unprocd_logs_info_frame: Frame for the top half of the unprocessed logs container.
 		#
-		unprocd_logs_info_frame = tk.Frame(unprocd_logs, bg="white", bd=0)
+		unprocd_logs_info_frame = tk.Frame(unprocd_logs, bg="#ffffff", bd=0)
 		unprocd_logs_info_frame.pack()
 		#
 		#unprocd_logs_info: Container that holds some stats about the unprocessed logs.
 		#
 		unprocd_logs_info_container = tk.Canvas(unprocd_logs_info_frame,
-									background="white",
+									background="#ffffff",
 									borderwidth=0,
 									highlightthickness=0, 
 									relief="ridge")
@@ -293,7 +310,7 @@ class MainView(tk.Frame):
 		#
 		#unprocd_logs_content_frame: Frame to hold a canvas and a vertical scrollbar connected to the canvas.
 		#
-		unprocd_logs_content_frame = tk.Frame(unprocd_logs, bg="white", bd=0)
+		unprocd_logs_content_frame = tk.Frame(unprocd_logs, bg="#ffffff", bd=0)
 		unprocd_logs_content_frame.pack(expand=True, fill=tk.Y, padx=15, pady=10)
 		#
 		#scr_unproc_logs: Scroll through the list of unprocessed logs.
@@ -328,7 +345,7 @@ class MainView(tk.Frame):
 		#
 		#lbl_total_unproc_logs: Total number of logs that have NOT yet been parsed.
 		#
-		lbl_total_unproc_logs = tk.Label(unprocd_logs_info_container, background="white", text="Total")
+		lbl_total_unproc_logs = tk.Label(unprocd_logs_info_container, background="#ffffff", text="Total")
 		lbl_total_unproc_logs.grid(sticky="w", pady=5, padx=5, row=1, column=0)
 		#
 		#tb_total_unproc_logs
@@ -342,7 +359,7 @@ class MainView(tk.Frame):
 		#
 		#lbl_oldest_unproc_log: The oldest log that has NOT yet been parsed.
 		#
-		lbl_oldest_unproc_log = tk.Label(unprocd_logs_info_container, background="white", text="Oldest")
+		lbl_oldest_unproc_log = tk.Label(unprocd_logs_info_container, background="#ffffff", text="Oldest")
 		lbl_oldest_unproc_log.grid(sticky="w", pady=5, padx=5, row=2, column=0)
 		#
 		#tb_oldest_unproc_logs
@@ -356,7 +373,7 @@ class MainView(tk.Frame):
 		#
 		#lbl_newest_unproc_log: The oldest log that has been parsed.
 		#
-		lbl_newest_unproc_log = tk.Label(unprocd_logs_info_container, background="white", text="Newest")
+		lbl_newest_unproc_log = tk.Label(unprocd_logs_info_container, background="#ffffff", text="Newest")
 		lbl_newest_unproc_log.grid(sticky="w", pady=5, padx=5, row=3, column=0)
 		#
 		#tb_newest_unproc_logs
@@ -373,7 +390,7 @@ class MainView(tk.Frame):
 		#container: Holds all the widgets of this panel.
 		#
 		container = tk.Canvas(parent, 
-					background="white", 
+					background="#ffffff", 
 					width=220, height=722,
 					highlightthickness=0)
 		container.grid(row=0, column=3, sticky="nw", pady=15, padx=11)
@@ -408,7 +425,7 @@ class MainView(tk.Frame):
 		#
 		#lbl_space: Spacer
 		#
-		lbl_space = tk.Label(container, height=2, background="white")
+		lbl_space = tk.Label(container, height=2, background="#ffffff")
 		lbl_space.pack(fill=tk.X, padx=1)
 		#
 		#lbl_processed: Label for section to parse processed log files.		
@@ -428,12 +445,12 @@ class MainView(tk.Frame):
 		#
 		#lbl_space2: Spacer
 		#
-		lbl_space2 = tk.Label(container, height=25, background="white")
+		lbl_space2 = tk.Label(container, height=25, background="#ffffff")
 		lbl_space2.pack(padx=1)
 		#
 		#cfgbtn: Edit configuration 'settings.ini' button.
 		#
-		cfgbtn = ttk.Button(container, text="Edit Configuration")
+		cfgbtn = ttk.Button(container, text="Edit Configuration", command=self.vc.pause_runlog_thread)
 		cfgbtn.pack(fill=tk.X, pady=1, padx=1)		
 		#
 		#hbtn: Show help info.
@@ -464,45 +481,15 @@ class MainView(tk.Frame):
 		
 	def load_log_processing_panel(self, parent):
 		m = ttk.PanedWindow(parent, orient=tk.HORIZONTAL)
-		m.pack(fill=tk.BOTH, expand=1)
+		m.pack(fill=tk.BOTH, expand=1)	
 		
 		
-		
-		right = tk.Label(m, text="bottom pane", background="white")
+		right = tk.Label(m, text="bottom pane", background="#ffffff", width=40)
 		m.add(right)
-		
-		
-		
-		#SAVE!! GOOD CODE TO MAKE TEXT WITH SCROLLING.
-		#~ frame = tk.Frame(parent, bd=2, relief=tk.SUNKEN)
-
-		#~ frame.grid_rowconfigure(0, weight=1)
-		#~ frame.grid_columnconfigure(0, weight=1)
-		
-		#~ xscrollbar = ttk.Scrollbar(frame, orient=tk.HORIZONTAL)
-		#~ xscrollbar.grid(row=1, column=0, sticky=tk.E+tk.W)
-		
-		#~ yscrollbar = ttk.Scrollbar(frame)
-		#~ yscrollbar.grid(row=0, column=1, sticky=tk.N+tk.S)
-		
-		#~ text = tk.Text(frame, wrap=tk.NONE, bd=0,
-			#~ xscrollcommand=xscrollbar.set,
-			#~ yscrollcommand=yscrollbar.set)
-		
-		#~ text.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
-		
-		#~ xscrollbar.config(command=text.xview)
-		#~ yscrollbar.config(command=text.yview)
-		
-		#~ frame.pack()
-		
-		
-		
 		#
 		#frame: Holds the scrollbar and listbox.
 		#
 		frame = tk.Frame(parent, background="#ffffff", relief=tk.SUNKEN)
-		#~ frame.pack(expand=1)
 		frame.pack()
 		#
 		# Add the frame to the left side of the panedwindow.
@@ -518,7 +505,7 @@ class MainView(tk.Frame):
 		#
 		self.lb_runlog_data = tk.Listbox(frame, selectmode=tk.SINGLE)
 		self.lb_runlog_data.pack(side=tk.LEFT, fill=tk.Y)
-		self.lb_runlog_data.config(width=130, height=29)		
+		self.lb_runlog_data.config(width=110, height=29)
 		#
 		#configure vsb command
 		#
@@ -533,7 +520,7 @@ class MainView(tk.Frame):
 		#Styles
 		#
 		style = ttk.Style()
-		style.configure("iislp.TFrame", background="white")
+		style.configure("iislp.TFrame", background="#ffffff")
 		#
 		#self
 		#
@@ -557,13 +544,13 @@ class MainView(tk.Frame):
 		#
 		#layout_frame: Container that holds the widgets that display the app's info.
 		#
-		layout_frame = tk.Frame(self.container, bg="white", bd=0)
+		layout_frame = tk.Frame(self.container, bg="#ffffff", bd=0)
 		layout_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)		
 		#
 		#layout_frame_bg: A blank white background for a frame.
 		#
 		layout_frame_bg = tk.Canvas(layout_frame, height=600, 
-							background="white", 
+							background="#ffffff", 
 							highlightthickness=0,  
 							relief="ridge")
 		layout_frame_bg.pack(side=tk.LEFT, fill=tk.BOTH, expand=1, padx=5, pady=5)				
@@ -602,7 +589,7 @@ class MainView(tk.Frame):
 
 	def __init__(self, vc):
 		#make the view
-		self.frame = tk.Frame(bg="white")
+		self.frame = tk.Frame(bg="#ffffff")
 		self.frame.grid(row=0,column=0)
 		
 		#set the delegate/callback pointer
@@ -700,7 +687,7 @@ class MainView(tk.Frame):
 		self.unprocd_logs_listbox.insert(tk.END, *unprocd_logs_list)
 		self.unprocd_logs_listbox.update_idletasks()
 		
-	def show_bulk_process_panel(self):
+	def show_log_processing_panel(self):
 		self.container.xview_moveto(.331)	# Odd numbering for move.  Not sure what measurement is used.
 		
 	def get_runtime_output(self):
@@ -715,7 +702,9 @@ class MainView(tk.Frame):
 		self.lb_runlog_data.see(tk.END)
 		self.lb_runlog_data.update_idletasks()
 		print ("finished loading runtime_log info...")
-		#~ print ("output_str: ", output_str)
+		
+		# Let the controller know you're done.
+		#~ self.vc.runlogs_loaded()
 		
 	def show_unprocd_panel(self, *args):
 		self.container.xview_moveto(.170)
@@ -754,7 +743,7 @@ class IISLPViewModel():
 		self.runtime_log_output = []		
 		
 		# Start up any watchers.
-		self.runtime_watcher_status = "Stopped"
+		#~ self.runtime_watcher_status = "Stopped"
 		#~ self.watch_runtime_log()
 		
 		#~ self.model = 0	
@@ -786,22 +775,22 @@ class IISLPViewModel():
 		self.vc.procd_logs_list_changeDelegate(self.procd_logs_list)
 		#~ self.modelDidChange() #delegate called on change
 		
-	def start_watch_runtime(self):
-		watcher_status = self.runtime_watcher_status
-		print ("watcher status: ", watcher_status)
-		if watcher_status is "Running":
-			# Already running.
-			return 
+	#~ def start_watch_runtime(self):
+		#~ watcher_status = self.runtime_watcher_status
+		#~ print ("watcher status: ", watcher_status)
+		#~ if watcher_status is "Running":
+			#~ # Already running.
+			#~ return 
 		
-		if watcher_status is "Stopped":
-			# Change the watcher status.
-			self.runtime_watcher_status = "Running"
-			# Start the watcher
-			print ("Starting up the watcher...")
-			self.watch_runtime_log()
+		#~ if watcher_status is "Stopped":
+			#~ # Change the watcher status.
+			#~ self.runtime_watcher_status = "Running"
+			#~ # Start the watcher
+			#~ print ("Starting up the watcher...")
+			#~ self.watch_runtime_log()
 			
-	def stop_watch_runtime(self):
-		self.watch_runtime_log = "Stopped"
+	#~ def stop_watch_runtime(self):
+		#~ self.watch_runtime_log = "Stopped"
 	
 	#Any internal processing for the model    
 	#~ def watch_runtime_log(self):
@@ -828,22 +817,55 @@ class IISLPViewModel():
 				#~ print ("self.runtime_watcher_status: ", self.runtime_watcher_status)
 				
 		#~ print ("Leaving watch_runtime_log...")
+		
+class iislpThread(threading.Thread):
+	def __init__(self, cmd):
+		threading.Thread.__init__(self)
+		self.run_command = cmd
+		self.daemon = True
+		self.paused = False
+		self.state = threading.Condition()
+		
+	def run(self):
+		#~ self.resume()
+		while True:
+			#~ print ("run self.state: ", self.state)
+			with self.state:
+				#~ print ("self.paused: ", self.paused)
+				if self.paused:
+					#~ print ("run paused...")
+					self.state.wait()	# block
+				else: 
+					#~ print ("run runit...")
+					self.run_command()
+					#~ self.pause()
+	
+	def resume(self):
+		with self.state:
+			self.paused = False
+			self.state.notify() # unblock
+			print ("state notify set...")
+			
+	def pause(self):
+		#~ print ("Pausing thread1...")
+		with self.state:
+			self.paused = True # make self block and wait
 
 class ThreadedClient:
 	'''Adapted from: http://code.activestate.com/recipes/82965-threads-tkinter-and-asynchronous-io/'''
 	def __init__(self, master):
-		self.master = master
-		
+		self.master = master		
 		self.config = ConfigMgr()
-		
-		self.queue = queue.Queue()
-		
+		self.call_interval = 100
+		self.queue = queue.Queue()		
 		self.gui = Controller(master, 
 					self.queue,  
-					self.end_runtime_log_watcher)
+					self.pause_runlog_thread,
+					self.start_runlog_thread)
 		
 		self.running = 1
-		self.thread1 = threading.Thread(target=self.worker_thread_1)
+		self.thread1 = iislpThread(self.worker_thread_1)		
+		#~ self.thread1 = threading.Thread(target=self.worker_thread_1)
 		self.thread1.start()
 		
 		self.periodic_call()
@@ -851,46 +873,53 @@ class ThreadedClient:
 	def periodic_call(self):
 		#~ print ("perd call")
 		self.gui.process_runtime_logs()
-		if not self.running:
-			print ("ERROR: The runtime_log output is not updating.  Thread not running!")
+		#~ if not self.running:
+			#~ print ("ERROR: The runtime_log output is not updating.  Thread not running!")		
 		self.master.after(100, self.periodic_call)
 	
 	def worker_thread_1(self):
-		print ("work thread: running?: ", self.running)
-		while (self.running):
+		#~ print ("run worker_thread_1...")
+		while(self.running):
 			with open(self.config.get_value(ConfigKeys.runtime_log), 'r') as log:
 				new_lines = []
 				for line in log:
 					new_lines.append(line)
 			
-			new_lines_count = len(new_lines)
-			#~ print ("adding newlines to the queue: count: ", new_lines_count)
-			self.queue.put(new_lines)
-			# Leave
-			#~ self.end_runtime_log_watcher()
+			# Add the log info to the queue.
+			self.queue.put(new_lines)			
+			
+			# Pause the thread.
+			#~ self.running = 0
+			#~ self.thread1.pause()
 	
 	#~ def start_runtime_log_watcher(self):
 		#~ print ("start runtime log watcher...")
 		#~ self.running = 1
 	
-	def end_runtime_log_watcher(self):
-		print ("end runtime log watcher...")
+	def start_runlog_thread(self):
+		print ("start runtime log thread...")
+		self.running = 1
+		self.thread1.resume()		
+	
+	def pause_runlog_thread(self):
+		print ("end runtime log thread...")
 		self.running = 0
+		self.thread1.pause()
 		
 	def on_closing(self):
 		# Clean up.
-		self.end_runtime_log_watcher()
+		self.pause_runlog_thread()
 		self.master.destroy()
 
 def main():
 	root = tk.Tk()
 	root.geometry("1280x768+100+100")
 	root.maxsize(0, 735)
-	root.minsize(1280, 735)
+	root.minsize(908, 735)
 	root.iconbitmap(default='logo2.ico')
 	root.title('iislp - IIS Log Parser')
 	
-	frame = tk.Frame(root, background="white")
+	frame = tk.Frame(root, background="#ffffff")
 	client = ThreadedClient(root)		
 	
 	root.protocol("WM_DELETE_WINDOW", client.on_closing)	
