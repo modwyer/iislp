@@ -1,6 +1,3 @@
-#MVC_Template_01
-#2014 May 23  by Steven Lipton http://makeAppPie.com
-
 import os
 import time
 import threading
@@ -11,6 +8,9 @@ from functools import partial
 from scripts.config_mgr import ConfigMgr
 from scripts.config_mgr import ConfigKeys
 
+'''
+Adapted from: MVC_Template_01 - 2014 May 23  by Steven Lipton http://makeAppPie.com
+'''
 #
 # A Model-View-Controller framework for TKinter.
 # Model: Data Structure. Controller can send messages to it, and model can respond to message.
@@ -30,7 +30,6 @@ class Controller():
 			queue, 
 			pause_runlog_thread,
 			start_runlog_thread):
-		print ("Init m and v...")
 		
 		self.parent = parent
 		self.queue = queue
@@ -45,22 +44,16 @@ class Controller():
 		self.final_runlog_output = "Killing all processes"
 		
 		self.config = ConfigMgr()
-		self.toggle_switch = {'Start': 'Running', 'Stop': 'Stopped'}
 		
 		self.view = MainView(self)
 		
 		self.model = IISLPViewModel(self)
 		
 		
-		#initalize properties in model, if any
-		print ("Init properties in model...")		
+		#initalize properties in model, if any	
 		self.model.set_procd_logs_list()		# Get the processed logs list.
 		
-		#initialize properties in view, if any
-		print ("Init properties in view...")
-		#~ self.load_procd_logs()		# Load the processed logs into view.
-		#~ pass
-		
+		#initialize properties in view, if any		
 			
 	def process_runtime_logs(self):
 		while (self.queue.qsize()):
@@ -80,54 +73,37 @@ class Controller():
 						self.pause_runlog_thread()
 			except Queue.Empty:
 				pass
-	
-	#~ def quitButtonPressed(self, text):
-		#~ print("quit btn was pressed!")
-		#~ self.view.set_lbl(text)
-		#~ self.parent.update_idletasks()
 		
 	def load_procd_logs(self):
-		print ("Loading processed logs list...")
 		self.model.set_procd_logs_list()
-		print ("Done loading...")
 		
 	def runlogs_loaded(self):
 		# Runtime logs are loaded.  Finish up.   
 		if not self.is_processing:
 			self.pause_runlog_thread()
 		
-#event handlers -- add functions called by command attribute in view
-	#~ def someHandelerMethod(self):
-		#~ pass
-		
+#event handlers -- add functions called by command attribute in view		
 	def bulk_process(self):
-		print ("starting bulk processing...")
-		self.is_processing = 1		# Let be known we are in the middle of processing log files
-		self.view.show_log_processing_panel()					# Move scrollview to the bulk processing panel.
-		self.start_runlog_thread()
-		#~ outp = ["msg1", "msg2", "msg3", "msg4"]
-		#~ for i in outp:
-			#~ print ("i: ", i)
-			#~ time.sleep(2)
-		#~ self.pause_runlog_thread()
-		
+		print ("Starting bulk processing...")
+		self.is_processing = 1							# Let be known we are in the middle of processing log files
+		self.view.show_log_processing_panel()			# Move scrollview to the bulk processing panel.
+		self.start_runlog_thread()		
 		
 	def set_procd_logs(self, log_list):
 		list_len = len(log_list)
-		self.view.set_procd_logs(log_list)					# Update processed logs list.
+		self.view.set_procd_logs(log_list)				# Update processed logs list.
 		self.view.set_total_procd_logs(list_len)	
 		self.view.set_oldest_procd_log(log_list[0])
 		self.view.set_newest_procd_log(log_list[list_len - 1])
 		
 	def set_unprocd_logs(self, log_list):
-		print ("set_unprocd_logs_info: ")
 		log_done_path = self.config.get_value(ConfigKeys.log_done)
 		
 		all_log_files = ([f for f in os.listdir(log_done_path) 
 			if f.endswith('.log')])
 		all_log_files_len = len(all_log_files)		
 				
-		filenames = [s[-13:] for s in log_list]		# Slice out the filenames from each string in log_list.
+		filenames = [s[-13:] for s in log_list]				# Slice out the filenames from each string in log_list.
 		filenames_len = len(filenames)				
 		'''
 		The items found in the new_set are the difference between all the 
@@ -143,27 +119,15 @@ class Controller():
 		self.view.set_unprocd_logs(new_set)
 		self.view.set_total_unprocd_logs(list_len)	
 		self.view.set_oldest_unprocd_log(new_set[0])
-		self.view.set_newest_unprocd_log(new_set[list_len - 1])
-		#***HERE.  just got the log file status section to work.
-		# what is next?
-		# need to add a command line/console output section to show the
-		# output of the running process.  or maybe have another panel
-		# that shows the runtime log file or the latest portion of it.
-		# what else do you need to see?
-		# what else needs to be interacted with?
-		# an editable window that displays the config file.  allow easy changes?
-		
+		self.view.set_newest_unprocd_log(new_set[list_len - 1])		
 
 #delegates -- add functions called by delegtes in model or view
 	def procd_logs_list_changeDelegate(self, lst):
-		# Update view widgets showing 'processed logs' info.
-		print ("List did change delegate...")
-		
+		# Update view widgets showing 'processed logs' info.		
 		self.set_procd_logs(lst)	# Update the processed logs' info fields.
 		self.set_unprocd_logs(lst)	# Update unprocessed logs list.
 		
 	def set_runtime_output_changeDelegate(self, output):
-		print ("set_runtime_output_changeDelegate hit: output.count: ", len(output))
 		self.view.set_runtime_output(output)
 		
 #View : User interface elements.
@@ -174,15 +138,6 @@ class Controller():
  
 class MainView(tk.Frame):
 	def load_procdlogs_panel(self, parent):
-		#
-		#lbl_log_stat_header: Header label for section that shows the status of processed/unprocessed logs.
-		#
-		#~ lbl_log_stat_header = Label(parent, 
-							#~ background="white", 
-							#~ text="Log File Status", 
-							#~ width=20, 
-							#~ anchor=CENTER)
-		#~ lbl_log_stat_header.pack(side=TOP, expand=True, pady=10)
 		#
 		#procd_logs: Main container that displays info about the processed logs.
 		#
@@ -216,7 +171,7 @@ class MainView(tk.Frame):
 		scr_proc_logs.pack(side=tk.RIGHT, fill=tk.Y)
 		#
 		#self.procd_logs_listbox: Holds the content of the logs_done.txt file- all the processed logs.
-		# This is filled in the method 'set_procd_logs'.
+		# 				     This is filled in the method 'set_procd_logs'.
 		#
 		self.procd_logs_listbox = tk.Listbox(procd_logs_content_frame, selectmode=tk.EXTENDED)
 		self.procd_logs_listbox.pack(side=tk.LEFT, fill=tk.Y, expand=1)
@@ -441,7 +396,6 @@ class MainView(tk.Frame):
 		#
 		brbtn = ttk.Button(container, text="Re-process All Bulk")
 		brbtn.pack(fill=tk.X, pady=10, padx=1)	
-		#~ brbtn.pack(pady=10, padx=1)	
 		#
 		#lbl_space2: Spacer
 		#
@@ -451,33 +405,10 @@ class MainView(tk.Frame):
 		#cfgbtn: Edit configuration 'settings.ini' button.
 		#
 		cfgbtn = ttk.Button(container, text="Edit Configuration", command=self.vc.pause_runlog_thread)
-		cfgbtn.pack(fill=tk.X, pady=1, padx=1)		
-		#
-		#hbtn: Show help info.
-		#
-		#~ hbtn = Button(self.frame, text="Help", width=30)
-		#~ hbtn.grid(row=5, column=0)
-		
-		#
-		#ecbtn: Edit the configuration file 'settings.ini'.
-		#
-		#~ ecbtn = Button(container, text="Edit Configuration", width=30)
-		#~ ecbtn.grid(row=5, column=3, pady=4)
-		
-	#~ def populate(self, frame):
-		#~ '''Put in some fake data'''
-		#~ for row in range(100):
-			#~ tk.Label(frame, 
-				#~ text="%s" % row, 
-				#~ width=3, 
-				#~ borderwidth="1", 
-				#~ relief="solid").grid(row=row, column=0)
-			#~ t = "this is the second column for row %s" % row
-			#~ tk.Label(frame, text=t).grid(row=row, column=1)
-			
-	#~ def onFrameConfigure(self, canvas):
-		#~ '''Reset the scroll region to encompass the inner frame'''
-		#~ canvas.configure(scrollregion=canvas.bbox("all"))
+		cfgbtn.pack(fill=tk.X, pady=1, padx=1)
+		'''
+		***TODO: Need to create new window to be able to edit the config.
+		'''
 		
 	def load_log_processing_panel(self, parent):
 		m = ttk.PanedWindow(parent, orient=tk.HORIZONTAL)
@@ -525,7 +456,6 @@ class MainView(tk.Frame):
 		#self
 		#
 		self.frame.pack(fill=tk.BOTH, expand=1)	
-		#~ self.frame.pack(expand=1)
 		self.frame.columnconfigure(0, weight=1)
 		self.frame.rowconfigure(1, weight=1)
 		#
@@ -595,10 +525,7 @@ class MainView(tk.Frame):
 		#set the delegate/callback pointer
 		self.vc = vc
 		
-		#control variables go here. Make getters and setters for them below
-		#~ self.entry_text = StringVar()
-		#~ self.entry_text.set('nil')
-		
+		#control variables go here. Make getters and setters for them below		
 		self.procd_logs_list 		= []
 		self.unprocd_logs_list		= []
 		# Processed log files.
@@ -616,14 +543,6 @@ class MainView(tk.Frame):
 		self.loadView()
 	
 	#Getters and setters for the control variables.
-	#~ def get_lbl_text(self):
-		#~ #returns a string of the entry text
-		#~ return self.entry_text.get()
-	
-	#~ def set_lbl(self, text):
-		#~ #sets the entry text given a string
-		#~ print ("set_lbl hit: ", text)
-		#~ self.entry_text.set(text)
 		
 	#total procd logs
 	def get_total_procd_logs(self):
@@ -672,8 +591,8 @@ class MainView(tk.Frame):
 		# Returns a list of processed logs
 		return self.procd_logs_list	
 		
-	def set_procd_logs(self, proc_logs_list):
-		print ("set_procd_logs: setting procd logs: list count ", len(proc_logs_list))		
+	def set_procd_logs(self, proc_logs_list):	
+		print ("Processed logs list count: ", len(proc_logs_list))
 		self.procd_logs_listbox.delete(0, tk.END)
 		self.procd_logs_listbox.insert(tk.END, *proc_logs_list)
 		self.procd_logs_listbox.update_idletasks()
@@ -682,7 +601,7 @@ class MainView(tk.Frame):
 		return self.unprocd_logs_list
 		
 	def set_unprocd_logs(self, unprocd_logs_list):
-		print ("set_unprocd_logs: count: ", len(unprocd_logs_list))
+		print ("Unprocessed logs list count: ", len(unprocd_logs_list))
 		self.unprocd_logs_listbox.delete(0, tk.END)
 		self.unprocd_logs_listbox.insert(tk.END, *unprocd_logs_list)
 		self.unprocd_logs_listbox.update_idletasks()
@@ -693,37 +612,17 @@ class MainView(tk.Frame):
 	def get_runtime_output(self):
 		return self.runtime_output.get()
 		
-	def set_runtime_output(self, text):
-		#~ output_str = '\n'.join(text)  # Turn string into separate lines.
-		#~ self.runtime_output.set(output_str)	
-		print ("set_runtime_output: setting procd logs: list count ", len(text))		
+	def set_runtime_output(self, text):	
 		self.lb_runlog_data.delete(0, tk.END)
 		self.lb_runlog_data.insert(tk.END, *text)
 		self.lb_runlog_data.see(tk.END)
 		self.lb_runlog_data.update_idletasks()
-		print ("finished loading runtime_log info...")
-		
-		# Let the controller know you're done.
-		#~ self.vc.runlogs_loaded()
 		
 	def show_unprocd_panel(self, *args):
 		self.container.xview_moveto(.170)
 		
 	def show_procd_panel(self, *args):
 		self.container.xview_moveto(0)
-		#***HERE 
-		#then start in on what happens in the bulk processing
-		#and what gets shown in that panel.
-		#also do the thing where the console output of a call to
-		#iislp gets put into a textfile - which has an entry in ini file -
-		# and a panel or a textbox in the bulk panel, that displays that
-		# text file as it gets written
-		# need to add some file watchers into the model i think
-		# to keep an eye on the logs_done and other files and when
-		# they change then call the controller methods that update the view.
-		# need config editing screen too.
-		
-		
 		
 #Model: Data Structure.
 #   --Controller can send messages to it, and model can respond to message.
@@ -740,83 +639,24 @@ class IISLPViewModel():
 		self.log_done_path = self.vc.config.get_value(ConfigKeys.logsdone_log)
 		
 		self.procd_logs_list = []
-		self.runtime_log_output = []		
-		
-		# Start up any watchers.
-		#~ self.runtime_watcher_status = "Stopped"
-		#~ self.watch_runtime_log()
-		
-		#~ self.model = 0	
+		self.runtime_log_output = []	
 		
 #Delegate goes here. Model would call this on internal change
-	#~ def modelDidChange(self):
-		#~ print ("model did change...")
-		#~ self.vc.procd_logs_list_changeDelegate(self.procd_logs_list)
-		#~ self.vc.set_runtime_output_changeDelegate(self.runtime_output)
 		
-	#Setters and getters for the model
-	#~ def getModel(self):
-		#~ return self.model
-	
+	#Setters and getters for the model	
 	def get_procd_logs_list(self):
 		return self.procd_logs_list
 	
-	# This needs to be a watcher too.
-	# Watch the logs_done.txt file for changes and alert controller if it changes.
+	'''
+	***TODO.  THIS NEEDS TO BE A THREAD!!!!!!!!!!!!!!!!
+	'''
 	def set_procd_logs_list(self):
-		print ("set_procd_logs_list: setting procd logs from logs_done.txt...")
 		# Need to retrieve logs done list and save it locally.
 		with open(self.log_done_path, 'r') as file:
 			for line in file:
-				#~ print ("line: ", line)
 				self.procd_logs_list.append(line)
 		
-		print ("set_procd_logs_list: read in logs_done.txt...")
 		self.vc.procd_logs_list_changeDelegate(self.procd_logs_list)
-		#~ self.modelDidChange() #delegate called on change
-		
-	#~ def start_watch_runtime(self):
-		#~ watcher_status = self.runtime_watcher_status
-		#~ print ("watcher status: ", watcher_status)
-		#~ if watcher_status is "Running":
-			#~ # Already running.
-			#~ return 
-		
-		#~ if watcher_status is "Stopped":
-			#~ # Change the watcher status.
-			#~ self.runtime_watcher_status = "Running"
-			#~ # Start the watcher
-			#~ print ("Starting up the watcher...")
-			#~ self.watch_runtime_log()
-			
-	#~ def stop_watch_runtime(self):
-		#~ self.watch_runtime_log = "Stopped"
-	
-	#Any internal processing for the model    
-	#~ def watch_runtime_log(self):
-		#~ print ("watch_runtime_log hit")	
-		
-		#~ while (self.runtime_watcher_status == "Running"):
-			#~ cur_line_count = len(self.runtime_log_output)
-			#~ print ("cur_line_count: ", cur_line_count)
-			#~ with open(self.vc.config.get_value(ConfigKeys.runtime_log), 'r') as log:
-				#~ new_lines = []
-				#~ for line in log:
-					#~ new_lines.append(line)
-			
-			#~ new_lines_count = len(new_lines)
-			#~ print ("new_lines_count: ", new_lines_count)
-			#~ if new_lines_count > cur_line_count:
-				#~ self.runtime_log_output = new_lines
-				#~ print ("self.runtime_log_output: ", self.runtime_log_output)
-				#~ #Notify the controller.
-				#~ self.vc.set_runtime_output_changeDelegate(self.runtime_log_output)
-				#~ # Get out of here.
-				#~ print ("Leaving the watcher...")
-				#~ self.runtime_watcher_status = "Stopped"
-				#~ print ("self.runtime_watcher_status: ", self.runtime_watcher_status)
-				
-		#~ print ("Leaving watch_runtime_log...")
 		
 class iislpThread(threading.Thread):
 	def __init__(self, cmd):
@@ -827,27 +667,20 @@ class iislpThread(threading.Thread):
 		self.state = threading.Condition()
 		
 	def run(self):
-		#~ self.resume()
 		while True:
-			#~ print ("run self.state: ", self.state)
 			with self.state:
-				#~ print ("self.paused: ", self.paused)
 				if self.paused:
-					#~ print ("run paused...")
 					self.state.wait()	# block
 				else: 
-					#~ print ("run runit...")
 					self.run_command()
-					#~ self.pause()
 	
 	def resume(self):
 		with self.state:
 			self.paused = False
 			self.state.notify() # unblock
-			print ("state notify set...")
+			print ("Resume running thread...")
 			
 	def pause(self):
-		#~ print ("Pausing thread1...")
 		with self.state:
 			self.paused = True # make self block and wait
 
@@ -865,20 +698,15 @@ class ThreadedClient:
 		
 		self.running = 1
 		self.thread1 = iislpThread(self.worker_thread_1)		
-		#~ self.thread1 = threading.Thread(target=self.worker_thread_1)
 		self.thread1.start()
 		
 		self.periodic_call()
 		
 	def periodic_call(self):
-		#~ print ("perd call")
-		self.gui.process_runtime_logs()
-		#~ if not self.running:
-			#~ print ("ERROR: The runtime_log output is not updating.  Thread not running!")		
+		self.gui.process_runtime_logs()		
 		self.master.after(100, self.periodic_call)
 	
 	def worker_thread_1(self):
-		#~ print ("run worker_thread_1...")
 		while(self.running):
 			with open(self.config.get_value(ConfigKeys.runtime_log), 'r') as log:
 				new_lines = []
@@ -886,23 +714,15 @@ class ThreadedClient:
 					new_lines.append(line)
 			
 			# Add the log info to the queue.
-			self.queue.put(new_lines)			
-			
-			# Pause the thread.
-			#~ self.running = 0
-			#~ self.thread1.pause()
-	
-	#~ def start_runtime_log_watcher(self):
-		#~ print ("start runtime log watcher...")
-		#~ self.running = 1
+			self.queue.put(new_lines)
 	
 	def start_runlog_thread(self):
-		print ("start runtime log thread...")
+		print ("Start runtime log thread...")
 		self.running = 1
 		self.thread1.resume()		
 	
 	def pause_runlog_thread(self):
-		print ("end runtime log thread...")
+		print ("End runtime log thread...")
 		self.running = 0
 		self.thread1.pause()
 		
@@ -912,14 +732,22 @@ class ThreadedClient:
 		self.master.destroy()
 
 def main():
+	#
+	#root
+	#
 	root = tk.Tk()
 	root.geometry("1280x768+100+100")
 	root.maxsize(0, 735)
 	root.minsize(908, 735)
 	root.iconbitmap(default='logo2.ico')
 	root.title('iislp - IIS Log Parser')
-	
+	#
+	#frame: Main frame of application.
+	#
 	frame = tk.Frame(root, background="#ffffff")
+	#
+	#client: Handles multi-threading for application.
+	#
 	client = ThreadedClient(root)		
 	
 	root.protocol("WM_DELETE_WINDOW", client.on_closing)	
