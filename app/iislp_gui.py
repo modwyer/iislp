@@ -28,15 +28,14 @@ class Controller():
 	def __init__(self, 
 			parent, 
 			queue, 
-			start_runlog_watch_cmd, 
 			end_runlog_watch_cmd):
 		print ("Init m and v...")
 		
 		self.parent = parent
 		self.queue = queue
 		
-		self.start_runlog_watch_cmd = start_runlog_watch_cmd
 		self.end_runlog_watch_cmd = end_runlog_watch_cmd
+		self.runtime_log_count = 0
 		
 		self.config = ConfigMgr()
 		self.toggle_switch = {'Start': 'Running', 'Stop': 'Stopped'}
@@ -59,8 +58,11 @@ class Controller():
 	def process_runtime_logs(self):
 		while (self.queue.qsize()):
 			try:
-				msg = self.queue.get(0)
-				print ("GuiThread: queue msg count: ", len(msg))
+				log_info = self.queue.get(0)
+				if len(log_info) > self.runtime_log_count:
+					self.runtime_log_count = len(log_info)
+					print ("GuiThread: self.runtime_log_count : ", self.runtime_log_count )
+					self.view.set_runtime_output(log_info)
 			except Queue.Empty:
 				pass
 	
@@ -83,10 +85,15 @@ class Controller():
 		print ("about to start watcher")
 		#~ self.model.start_watch_runtime()		# Start watching the runtime_log file.
 		self.start_runlog_watch_cmd()
-		#~ time.sleep(10)
+		'''
+		***HERE.  so either you don't end the thread in process_runtime_logs
+		or you do.  then in here you need to start it again som
+		THIS IS NOT STARTING THE WATCHER
+		'''
+		#~ time.sleep(1)
 		#~ self.model.stop_watch_runtime()		# Stop watching the runtime_log file.
 		#~ self.model.start_watch_runtime()
-		self.end_runlog_watch_cmd()
+		#~ self.end_runlog_watch_cmd()
 		
 	def set_procd_logs(self, log_list):
 		list_len = len(log_list)
@@ -456,15 +463,51 @@ class MainView(tk.Frame):
 		#~ canvas.configure(scrollregion=canvas.bbox("all"))
 		
 	def load_log_processing_panel(self, parent):
+		m = ttk.PanedWindow(parent, orient=tk.HORIZONTAL)
+		m.pack(fill=tk.BOTH, expand=1)
+		
+		
+		
+		right = tk.Label(m, text="bottom pane", background="white")
+		m.add(right)
+		
+		
+		
+		#SAVE!! GOOD CODE TO MAKE TEXT WITH SCROLLING.
+		#~ frame = tk.Frame(parent, bd=2, relief=tk.SUNKEN)
+
+		#~ frame.grid_rowconfigure(0, weight=1)
+		#~ frame.grid_columnconfigure(0, weight=1)
+		
+		#~ xscrollbar = ttk.Scrollbar(frame, orient=tk.HORIZONTAL)
+		#~ xscrollbar.grid(row=1, column=0, sticky=tk.E+tk.W)
+		
+		#~ yscrollbar = ttk.Scrollbar(frame)
+		#~ yscrollbar.grid(row=0, column=1, sticky=tk.N+tk.S)
+		
+		#~ text = tk.Text(frame, wrap=tk.NONE, bd=0,
+			#~ xscrollcommand=xscrollbar.set,
+			#~ yscrollcommand=yscrollbar.set)
+		
+		#~ text.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
+		
+		#~ xscrollbar.config(command=text.xview)
+		#~ yscrollbar.config(command=text.yview)
+		
+		#~ frame.pack()
+		
+		
+		
 		#
 		#frame: Holds the scrollbar and listbox.
 		#
-		frame = tk.Frame(parent, background="#ffffff")
+		frame = tk.Frame(parent, background="#ffffff", relief=tk.SUNKEN)
+		#~ frame.pack(expand=1)
 		frame.pack()
 		#
-		#canvas: Main container for this panel.
+		# Add the frame to the left side of the panedwindow.
 		#
-		#~ canvas = tk.Canvas(frame, borderwidth=0, background="#ffffff")
+		m.add(frame)
 		#
 		#vsb: Vertical scrollbar.
 		#
@@ -475,7 +518,7 @@ class MainView(tk.Frame):
 		#
 		self.lb_runlog_data = tk.Listbox(frame, selectmode=tk.SINGLE)
 		self.lb_runlog_data.pack(side=tk.LEFT, fill=tk.Y)
-		self.lb_runlog_data.config(width=46, height=29)
+		self.lb_runlog_data.config(width=130, height=29)		
 		#
 		#configure vsb command
 		#
@@ -484,61 +527,7 @@ class MainView(tk.Frame):
 		#configure listbox yscrollcommand
 		#
 		self.lb_runlog_data.configure(yscrollcommand=vsb.set)
-		
-		
-		#~ canvas.pack(side="left", fill="both", expand=True, pady=5)
-		#~ canvas.create_window((4,4), window=frame, anchor="nw")
-		
-		#~ output = tk.Label(frame, textvariable=self.runtime_output)
-		#~ output.pack()
-		
-		#~ frame.bind("<Configure>", lambda event, canvas=canvas: self.onFrameConfigure(canvas))
-		
-		#~ self.populate(frame)
-		
-		
-		#
-		#lbl_bulk_proc: Label header for the bulk processing inf0.
-		#
-		#~ lbl_bulk_proc = Label(parent, 
-						#~ background="lightyellow", 
-						#~ text="Processing Log Files",
-						#~ width=40, height=2)
-		#~ lbl_bulk_proc.pack(fill=X, padx=5)
-		#
-		#frame: Frame to hold scrollbar and canvas.
-		#
-		#~ frame = tk.Frame(parent, bg="white", bd=0)
-		#~ frame.pack(expand=True, fill=Y, padx=15, pady=10)
-		#
-		#scr
-		#
-		#~ scr = Scrollbar(frame, orient=VERTICAL)
-		#~ scr.pack(side=RIGHT, fill=Y)
-		#
-		#container: Holds all the widgets of this panel.
-		#
-		#~ container = Canvas(frame, width=25, height=600, 
-						#~ background="blue", relief="ridge",
-						#~ highlightthickness=0)									
-		#~ container.pack(side=LEFT, fill=BOTH, expand=YES)
-		#~ container.config(scrollregion=[0,0,500,2000]) 			
-		#~ container.config(yscrollcommand=scr.set)		
-		#~ container.pack(side=LEFT, fill=BOTH, expand=YES)
-		#~ container.create_window((0,0), window=layout_frame, anchor='nw')
-		# Reset the view to home position.
-		#~ container.yview_moveto(0)
-		#
-		#~ scr.config(command=container.yview)
-		#
-		#run_output: Console output of the bulk processing.
-		#
-		#~ run_output = Label(container,
-					#~ width=50, height=100,
-					#~ background="black",
-					#~ textvariable=self.bulk_run_output)
-		#~ run_output.pack(fill=X, pady=10, padx=5)
-	
+			
 	def loadView(self):
 		#
 		#Styles
@@ -815,73 +804,19 @@ class IISLPViewModel():
 		self.watch_runtime_log = "Stopped"
 	
 	#Any internal processing for the model    
-	def watch_runtime_log(self):
-		print ("watch_runtime_log hit")	
+	#~ def watch_runtime_log(self):
+		#~ print ("watch_runtime_log hit")	
 		
-		while (self.runtime_watcher_status == "Running"):
-			cur_line_count = len(self.runtime_log_output)
-			print ("cur_line_count: ", cur_line_count)
-			with open(self.vc.config.get_value(ConfigKeys.runtime_log), 'r') as log:
-				new_lines = []
-				for line in log:
-					new_lines.append(line)
-			
-			new_lines_count = len(new_lines)
-			print ("new_lines_count: ", new_lines_count)
-			if new_lines_count > cur_line_count:
-				self.runtime_log_output = new_lines
-				#~ print ("self.runtime_log_output: ", self.runtime_log_output)
-				#Notify the controller.
-				self.vc.set_runtime_output_changeDelegate(self.runtime_log_output)
-				# Get out of here.
-				print ("Leaving the watcher...")
-				self.runtime_watcher_status = "Stopped"
-				print ("self.runtime_watcher_status: ", self.runtime_watcher_status)
-				
-		print ("Leaving watch_runtime_log...")
-
-class ThreadedClient:
-	def __init__(self, master):
-		self.master = master
-		
-		self.config = ConfigMgr()
-		
-		self.queue = queue.Queue()
-		
-		self.gui = Controller(master, 
-					self.queue, 
-					self.start_runtime_log_watcher, 
-					self.end_runtime_log_watcher)
-		
-		self.running = 1
-		self.thread1 = threading.Thread(target=self.worker_thread_1)
-		self.thread1.start()
-		
-		self.periodic_call()
-		
-	def periodic_call(self):
-		print ("TheadedClient: Entering periodic_call...")
-		self.gui.process_runtime_logs()
-		if not self.running:
-			#~ import sys
-			print ("AHHHHHHHH!!!!!!!!!!")
-			#~ sys.exit(1)
-		self.master.after(10, self.periodic_call)
-		print ("TheadedClient: Leaving periodic_call...")
-	
-	def worker_thread_1(self):
-		print ("TheadedClient: Entering worker_thread_1...")
-		while (self.running):
+		#~ while (self.runtime_watcher_status == "Running"):
 			#~ cur_line_count = len(self.runtime_log_output)
 			#~ print ("cur_line_count: ", cur_line_count)
-			with open(self.config.get_value(ConfigKeys.runtime_log), 'r') as log:
-				new_lines = []
-				for line in log:
-					new_lines.append(line)
+			#~ with open(self.vc.config.get_value(ConfigKeys.runtime_log), 'r') as log:
+				#~ new_lines = []
+				#~ for line in log:
+					#~ new_lines.append(line)
 			
-			new_lines_count = len(new_lines)
+			#~ new_lines_count = len(new_lines)
 			#~ print ("new_lines_count: ", new_lines_count)
-			self.queue.put(new_lines)
 			#~ if new_lines_count > cur_line_count:
 				#~ self.runtime_log_output = new_lines
 				#~ print ("self.runtime_log_output: ", self.runtime_log_output)
@@ -892,12 +827,54 @@ class ThreadedClient:
 				#~ self.runtime_watcher_status = "Stopped"
 				#~ print ("self.runtime_watcher_status: ", self.runtime_watcher_status)
 				
-		print ("TheadedClient: Leaving worker_thread_1...")
-	
-	def start_runtime_log_watcher(self):
+		#~ print ("Leaving watch_runtime_log...")
+
+class ThreadedClient:
+	'''Adapted from: http://code.activestate.com/recipes/82965-threads-tkinter-and-asynchronous-io/'''
+	def __init__(self, master):
+		self.master = master
+		
+		self.config = ConfigMgr()
+		
+		self.queue = queue.Queue()
+		
+		self.gui = Controller(master, 
+					self.queue,  
+					self.end_runtime_log_watcher)
+		
 		self.running = 1
+		self.thread1 = threading.Thread(target=self.worker_thread_1)
+		self.thread1.start()
+		
+		self.periodic_call()
+		
+	def periodic_call(self):
+		#~ print ("perd call")
+		self.gui.process_runtime_logs()
+		if not self.running:
+			print ("ERROR: The runtime_log output is not updating.  Thread not running!")
+		self.master.after(100, self.periodic_call)
+	
+	def worker_thread_1(self):
+		print ("work thread: running?: ", self.running)
+		while (self.running):
+			with open(self.config.get_value(ConfigKeys.runtime_log), 'r') as log:
+				new_lines = []
+				for line in log:
+					new_lines.append(line)
+			
+			new_lines_count = len(new_lines)
+			#~ print ("adding newlines to the queue: count: ", new_lines_count)
+			self.queue.put(new_lines)
+			# Leave
+			#~ self.end_runtime_log_watcher()
+	
+	#~ def start_runtime_log_watcher(self):
+		#~ print ("start runtime log watcher...")
+		#~ self.running = 1
 	
 	def end_runtime_log_watcher(self):
+		print ("end runtime log watcher...")
 		self.running = 0
 		
 	def on_closing(self):
