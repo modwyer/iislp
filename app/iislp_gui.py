@@ -4,26 +4,9 @@ import threading
 import queue
 import tkinter as tk
 import tkinter.ttk as ttk
-from functools import partial
 from scripts.config_mgr import ConfigMgr
 from scripts.config_mgr import ConfigKeys
 
-'''
-Adapted from: MVC_Template_01 - 2014 May 23  by Steven Lipton http://makeAppPie.com
-'''
-#
-# A Model-View-Controller framework for TKinter.
-# Model: Data Structure. Controller can send messages to it, and model can respond to message.
-# View : User interface elements. Controller can send messages to it. View can call methods from Controller when an event happens.
-# Controller: Ties View and Model together. turns UI responses into changes in data and vice versa.
- 
-#
-#Controller: Ties View and Model together.
-#       --Performs actions based on View events.
-#       --Sends messages to Model and View and gets responses
-#       --Has Delegates
-#       --Controllers may talk to other controllers through delegates
- 
 class Controller():
 	def __init__(self, 
 			parent, 
@@ -82,7 +65,7 @@ class Controller():
 		if not self.is_processing:
 			self.pause_runlog_thread()
 		
-#event handlers -- add functions called by command attribute in view		
+#event handlers 	
 	def bulk_process(self):
 		print ("Starting bulk processing...")
 		self.is_processing = 1							# Let be known we are in the middle of processing log files
@@ -121,7 +104,7 @@ class Controller():
 		self.view.set_oldest_unprocd_log(new_set[0])
 		self.view.set_newest_unprocd_log(new_set[list_len - 1])		
 
-#delegates -- add functions called by delegtes in model or view
+#delegates 
 	def procd_logs_list_changeDelegate(self, lst):
 		# Update view widgets showing 'processed logs' info.		
 		self.set_procd_logs(lst)	# Update the processed logs' info fields.
@@ -129,13 +112,7 @@ class Controller():
 		
 	def set_runtime_output_changeDelegate(self, output):
 		self.view.set_runtime_output(output)
-		
-#View : User interface elements.
-#       --Controller can send messages to it.
-#       --View can call methods from Controller vc when an event happens.
-#       --NEVER communicates with Model.
-#       --Has setters and getters to communicate with controller
- 
+
 class MainView(tk.Frame):
 	def load_procdlogs_panel(self, parent):
 		#
@@ -404,7 +381,7 @@ class MainView(tk.Frame):
 		#
 		#cfgbtn: Edit configuration 'settings.ini' button.
 		#
-		cfgbtn = ttk.Button(container, text="Edit Configuration", command=self.vc.pause_runlog_thread)
+		cfgbtn = ttk.Button(container, text="Edit Configuration")
 		cfgbtn.pack(fill=tk.X, pady=1, padx=1)
 		'''
 		***TODO: Need to create new window to be able to edit the config.
@@ -592,7 +569,7 @@ class MainView(tk.Frame):
 		return self.procd_logs_list	
 		
 	def set_procd_logs(self, proc_logs_list):	
-		print ("Processed logs list count: ", len(proc_logs_list))
+		print ("GuiThread: Processed logs list count: ", len(proc_logs_list))
 		self.procd_logs_listbox.delete(0, tk.END)
 		self.procd_logs_listbox.insert(tk.END, *proc_logs_list)
 		self.procd_logs_listbox.update_idletasks()
@@ -601,7 +578,7 @@ class MainView(tk.Frame):
 		return self.unprocd_logs_list
 		
 	def set_unprocd_logs(self, unprocd_logs_list):
-		print ("Unprocessed logs list count: ", len(unprocd_logs_list))
+		print ("GuiThread: Unprocessed logs list count: ", len(unprocd_logs_list))
 		self.unprocd_logs_listbox.delete(0, tk.END)
 		self.unprocd_logs_listbox.insert(tk.END, *unprocd_logs_list)
 		self.unprocd_logs_listbox.update_idletasks()
@@ -623,13 +600,7 @@ class MainView(tk.Frame):
 		
 	def show_procd_panel(self, *args):
 		self.container.xview_moveto(0)
-		
-#Model: Data Structure.
-#   --Controller can send messages to it, and model can respond to message.
-#   --Uses delegates from vc to send messages to the Controller of internal change
-#   --NEVER communicates with View
-#   --Has setters and getters to communicate with Controller
- 
+
 class IISLPViewModel():
 	def __init__(self,vc):
 		#set delegate/callback pointer
@@ -643,7 +614,7 @@ class IISLPViewModel():
 		
 #Delegate goes here. Model would call this on internal change
 		
-	#Setters and getters for the model	
+	#Setters and getters 
 	def get_procd_logs_list(self):
 		return self.procd_logs_list
 	
