@@ -7,6 +7,16 @@ import tkinter.ttk as ttk
 from scripts.config_mgr import ConfigMgr
 from scripts.config_mgr import ConfigKeys
 
+def get_subset(set, start, end):
+	if len(set) < end:
+		return set
+		
+	subset = []	
+	for x in range(start, end):
+		subset.append(set[x])
+		
+	return subset
+
 class Controller():
 	def __init__(self, 
 			parent, 
@@ -26,15 +36,15 @@ class Controller():
 		
 		self.final_runlog_output = "Killing all processes"
 		
-		self.config = ConfigMgr()
-		
-		self.view = MainView(self)
-		
+		self.config = ConfigMgr()		
+		self.view = MainView(self)		
 		self.model = IISLPViewModel(self)
 		
-		
+		self.unprocd_logs_list = []
+				
 		#initalize properties in model, if any	
 		self.model.set_procd_logs_list()		# Get the processed logs list.
+		
 		
 		#initialize properties in view, if any		
 			
@@ -43,6 +53,7 @@ class Controller():
 			try:
 				log_info = self.queue.get(0)
 				len_log_info = len(log_info)
+				
 				# While the app is running, we only display additional entries.
 				# Removed entries will be ignored until more lines are saved.
 				if len_log_info > self.runtime_log_count:
@@ -50,8 +61,8 @@ class Controller():
 					print ("GuiThread: self.runtime_log_count : ", self.runtime_log_count )
 					self.view.set_runtime_output(log_info)
 					
-					# Auto-shutdown the runtime_log thread is we read in the
-					# final line of the app output.
+					# Auto-shutdown the runtime_log thread if the final line contains
+					# 'Killing all processes'.
 					if self.final_runlog_output in log_info[len_log_info - 1]:
 						self.pause_runlog_thread()
 			except Queue.Empty:
@@ -67,10 +78,68 @@ class Controller():
 		
 #event handlers 	
 	def bulk_process(self):
-		print ("Starting bulk processing...")
-		self.is_processing = 1							# Let be known we are in the middle of processing log files
-		self.view.show_log_processing_panel()			# Move scrollview to the bulk processing panel.
-		self.start_runlog_thread()		
+		if self.is_processing is 1: 
+			return
+		else: 
+			#should we call methods in view to disable buttons??
+			self.is_processing = 1					# Let be known we are in the middle of processing log files
+			
+		self.view.set_proc_output("Starting bulk processing...")
+		self.view.show_log_processing_panel()		# Move scrollview to the bulk processing panel.
+		
+		self.view.set_proc_output("Starting runtime_log reading thread...")		
+		self.start_runlog_thread()					# Start displaying changes made to 'run_time.log'.
+		
+		unprocd_log_count = len(self.unprocd_logs_list)	# How many unprocessed logs?
+		
+		max_logs_per_batch = 40
+		
+		
+		# Put all of the logs into batches of 40.
+		log_batches = {}
+		start = 0
+		end = 40
+		post_fix = 0
+		iter_count = unprocd_log_count % 40
+		print ("iter_count: ", iter_count)
+		
+		for x in range(0, iter_count):
+			log_batches["batch_%s" % str(x)] = self.unprocd_logs_list[start:end]
+			new_start = start + 40
+			new_end = end + 40
+			start = new_start if unprocd_log_count > new_start else unprocd_log_count - 1
+			end = new_end if unprocd_log_count > new_end else unprocd_log_count
+			
+		
+		#~ working_set = get_subset(self.unprocd_logs_list, 0, max_logs_per_batch)  
+		
+		self.view.set_proc_output("Unprocessed logs count: %s" % len(self.unprocd_logs_list))
+		self.view.set_proc_output("Unprocessed log_batches: %s" % str(log_batches))
+		#~ self.view.set_proc_output("Unprocessed logs: [%s]" % ', '.join(working_set))
+		
+		
+		
+		
+		# Need to take the first 40 logs (0 < logs < (40 if logs len > 40 else logs len)).
+		#~ end = 40 if unprocd_log_count > 40 else unprocd_log_count
+		#~ print ("end: ", end)
+		#~ working_set = []
+		#~ logs_left = []
+		
+		#~ for x in range(0, end):
+			#~ working_set.append(self.unprocd_logs_list[x])
+		
+		#~ self.view.set_proc_output("Unprocessed logs: [%s]" % ', '.join(working_set))
+		
+		#~ if unprocd_log_count > 40:
+			#~ logs_left = []
+			#~ for x in range(40, end):
+				#~ logs_left.append(self.unprocd_logs_list[x])
+		
+		#~ self.view.set_proc_output("Logs_left.count: %s" % len(logs_left))
+		#~ self.view.set_proc_output("Logs_left: [%s]" % ', '.join(logs_left))
+		
+		
 		
 	def set_procd_logs(self, log_list):
 		list_len = len(log_list)
@@ -96,6 +165,8 @@ class Controller():
 		The length of the list of parsed log files 
 		'''
 		new_set = all_log_files[len(filenames):]
+		# Save a copy of the unprocessed logs.
+		self.unprocd_logs_list = new_set
 		
 		# Tell the view to update its uprocessed logs list.
 		list_len = len(new_set)
@@ -388,30 +459,47 @@ class MainView(tk.Frame):
 		'''
 		
 	def load_log_processing_panel(self, parent):
+		#
+		#m: PanedWindow
+		#
 		m = ttk.PanedWindow(parent, orient=tk.HORIZONTAL)
-		m.pack(fill=tk.BOTH, expand=1)	
-		
-		
-		right = tk.Label(m, text="bottom pane", background="#ffffff", width=40)
-		m.add(right)
+		m.pack(fill=tk.BOTH, expand=1)
+		#
+		#frame: Holds the widgets displaying output of a processing job.
+		#
+		frame = tk.Frame(m, background="lightgray")
+		frame.pack()
+		#
+		#lbl_proc_output: Header for processing output.
+		#
+		lbl_proc_output = tk.Label(frame, text="Processing Output", background="lightyellow", height=2)
+		lbl_proc_output.pack(fill=tk.X)
+		#
+		#self.tb_proc_output: Output from the gui kicking off log file processing.
+		#
+		self.tb_proc_output = tk.Text(frame, wrap=tk.WORD)
+		self.tb_proc_output.pack(side=tk.LEFT, fill=tk.Y)
+		self.tb_proc_output.config(width=40, height=29)
 		#
 		#frame: Holds the scrollbar and listbox.
 		#
-		frame = tk.Frame(parent, background="#ffffff", relief=tk.SUNKEN)
-		frame.pack()
+		frame2 = tk.Frame(m, background="#ffffff", relief=tk.SUNKEN)
+		frame2.pack()
 		#
-		# Add the frame to the left side of the panedwindow.
+		#lbl_runlog:  Header for the runtime_log output.
 		#
-		m.add(frame)
+		lbl_text = self.vc.config.get_value(ConfigKeys.runtime_log)
+		lbl_runlog = tk.Label(frame2, text="'" + lbl_text +"'", background="lightyellow", height=2)
+		lbl_runlog.pack(fill=tk.X)
 		#
 		#vsb: Vertical scrollbar.
 		#
-		vsb = tk.Scrollbar(frame, orient="vertical")
+		vsb = tk.Scrollbar(frame2, orient="vertical")
 		vsb.pack(side="right", fill="y", pady=5)
 		#
-		#listbox: Displays the contents of the runtime_log.
+		#self.lb_runlog_data: Displays the contents of the runtime_log.
 		#
-		self.lb_runlog_data = tk.Listbox(frame, selectmode=tk.SINGLE)
+		self.lb_runlog_data = tk.Listbox(frame2, selectmode=tk.SINGLE)
 		self.lb_runlog_data.pack(side=tk.LEFT, fill=tk.Y)
 		self.lb_runlog_data.config(width=110, height=29)
 		#
@@ -421,7 +509,12 @@ class MainView(tk.Frame):
 		#
 		#configure listbox yscrollcommand
 		#
-		self.lb_runlog_data.configure(yscrollcommand=vsb.set)
+		self.lb_runlog_data.configure(yscrollcommand=vsb.set)		
+		#
+		# Add the frames to the panedwindow.
+		#
+		m.add(frame)
+		m.add(frame2)
 			
 	def loadView(self):
 		#
@@ -585,7 +678,15 @@ class MainView(tk.Frame):
 		
 	def show_log_processing_panel(self):
 		self.container.xview_moveto(.331)	# Odd numbering for move.  Not sure what measurement is used.
-		
+	
+	def set_proc_output(self, output, clear=None):
+		print ("GuiThread: Set Processing output...", output)
+		if clear is True:
+			self.tb_proc_output.delete(0, tk.END)
+		self.tb_proc_output.insert(tk.END, output)
+		self.tb_proc_output.insert(tk.END, "\n")
+		self.tb_proc_output.update_idletasks()
+	
 	def get_runtime_output(self):
 		return self.runtime_output.get()
 		
