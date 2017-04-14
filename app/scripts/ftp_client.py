@@ -3,10 +3,10 @@ from ftplib import FTP
 
 class FtpClient(object):
 	def __init__(self):
-		#~ HOST = '192.168.1.105' #Home.  Check 'ip addr' in a terminal on the server to get IP.
-		HOST = '192.168.56.101' #Work. Check 'ipconfig' in a terminal on workstation to get 'VirtualBox Host Only' IP.
+		#~ HOST = '' #Home.  Check 'ip addr' in a terminal on the server to get IP.
+		HOST = '' #Work. Check 'ipconfig' in a terminal on workstation to get 'VirtualBox Host Only' IP.
 		USER = 'bcftp'
-		PASSWD = '32davis*bc'
+		PASSWD = ''
 		self.ftp = FTP(HOST, USER, PASSWD)
 		self.upload_files = []
 		

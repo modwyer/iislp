@@ -2,6 +2,8 @@ import os
 import time
 import threading
 import queue
+import math
+from decimal import Decimal
 import tkinter as tk
 import tkinter.ttk as ttk
 from scripts.config_mgr import ConfigMgr
@@ -78,6 +80,8 @@ class Controller():
 		
 #event handlers 	
 	def bulk_process(self):
+		self.view.show_log_processing_panel()		# Move scrollview to the bulk processing panel.
+		
 		if self.is_processing is 1: 
 			return
 		else: 
@@ -85,37 +89,33 @@ class Controller():
 			self.is_processing = 1					# Let be known we are in the middle of processing log files
 			
 		self.view.set_proc_output("Starting bulk processing...")
-		self.view.show_log_processing_panel()		# Move scrollview to the bulk processing panel.
+		self.view.set_proc_output("Starting runtime_log reading thread...")
 		
-		self.view.set_proc_output("Starting runtime_log reading thread...")		
-		self.start_runlog_thread()					# Start displaying changes made to 'run_time.log'.
-		
+		self.start_runlog_thread()					# Start displaying changes made to 'run_time.log'.		
 		unprocd_log_count = len(self.unprocd_logs_list)	# How many unprocessed logs?
-		
-		max_logs_per_batch = 40
-		
-		
+				
 		# Put all of the logs into batches of 40.
 		log_batches = {}
 		start = 0
 		end = 40
 		post_fix = 0
-		iter_count = unprocd_log_count % 40
+		unprocd_log_count = 2
+		
+		iter_count = math.ceil(float(format(Decimal((unprocd_log_count / 40)), '.2f')))
 		print ("iter_count: ", iter_count)
 		
-		for x in range(0, iter_count):
-			log_batches["batch_%s" % str(x)] = self.unprocd_logs_list[start:end]
-			new_start = start + 40
-			new_end = end + 40
-			start = new_start if unprocd_log_count > new_start else unprocd_log_count - 1
-			end = new_end if unprocd_log_count > new_end else unprocd_log_count
+		if iter_count is 0:
+			log_batches["batch_%s" % str(iter_count)] = self.unprocd_logs_list[:unprocd_log_count]
+		else:		
+			for x in range(0, iter_count):
+				log_batches["batch_%s" % str(x)] = self.unprocd_logs_list[start:end]
+				new_start = start + 40
+				new_end = end + 40
+				start = new_start if unprocd_log_count > new_start else unprocd_log_count - 1
+				end = new_end if unprocd_log_count > new_end else unprocd_log_count
 			
-		
-		#~ working_set = get_subset(self.unprocd_logs_list, 0, max_logs_per_batch)  
-		
 		self.view.set_proc_output("Unprocessed logs count: %s" % len(self.unprocd_logs_list))
 		self.view.set_proc_output("Unprocessed log_batches: %s" % str(log_batches))
-		#~ self.view.set_proc_output("Unprocessed logs: [%s]" % ', '.join(working_set))
 		
 		
 		
@@ -586,7 +586,6 @@ class MainView(tk.Frame):
 		#
 		self.load_log_processing_panel(layout_frame_bg)
 		
-
 	def __init__(self, vc):
 		#make the view
 		self.frame = tk.Frame(bg="#ffffff")
