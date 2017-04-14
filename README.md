@@ -10,4 +10,6 @@ This was a side project that was eventually scrapped in favor of using Splunk to
 -Once the CSV files arrived, a Java application watching that directory would take the CSV and upload it to a Neo4j graph database  
 -From there queries could be made  
 
+This was run via the command line initially and I started to work on a GUI for it, iislp_gui.py.  I had to move onto other projects before the GUI was completed.
+
 This project was a learning experience for Python and Neo4j, both of which I like very much.
