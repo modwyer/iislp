@@ -103,6 +103,6 @@ $RECYCLE.BIN/
 # Other file types
 *.csv
 *.log
-*.txt
+#*.txt
 *.ini
-*.bat
+#*.bat

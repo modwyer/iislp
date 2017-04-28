@@ -1,0 +1,55 @@
+IISLP(1)                     User Manuals                    IISLP(1)
+
+
+NAME
+     iislp - (IIS Log Parser)
+					Parse IIS logs and store the log info in a database.
+
+SYNOPSIS
+     iislp.py [-b --bulk] [-v --verbose ] [-h --help]
+
+DESCRIPTION
+     iislp  Parses the logs found in the daily IIS web logs.
+		 Certain types of logs are removed and their data is saved
+		 into a CSV file.  The CSV file is used to upload the data
+		 to a database.
+
+OPTIONS
+     -b --bulk 
+					Write out up to 100k rows into one CSV file per log type.
+					If this option is omitted then each type of log in a log
+					file will generate a separate CSV file.
+
+     -v --verbose 
+					Print out some of the logging info to console during execution.
+
+     -h --help 
+					Show help info.
+
+FILES
+     /iisLogParser
+				/iisLogCsv
+				/iislp
+						/app
+								/bulk_csv
+								/csv
+								/scripts
+						/app_logs								
+						/config
+						/iis_log
+				/iislpGui
+
+ENVIRONMENT
+     
+
+DIAGNOSTICS
+     
+
+BUGS
+     
+
+AUTHOR
+     Mick O'Dwyer <modwyer at bestcase dot com>
+
+
+Best Case, LLC                Last change: JULY 2015
