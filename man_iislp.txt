@@ -49,7 +49,4 @@ BUGS
      
 
 AUTHOR
-     Mick O'Dwyer <modwyer at bestcase dot com>
-
-
-Best Case, LLC                Last change: JULY 2015
+     Mick O'Dwyer <modwyer8 at gmail dot com>
